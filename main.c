@@ -2,7 +2,7 @@ int command = 0;
 int builtin = 0;
 char* path = "";
 
-shell_init() {
+void shell_init() {
 	// init all variables.
 	// define (allocate storage) for some var/tables
 	// init all tables (e.g., alias table)
@@ -24,7 +24,7 @@ int getCommand() {
 	}
 }
 
-recover_from_errors() {
+void recover_from_errors() {
 	// find out if error occurs in middle of command
 	// that is the command still has a “tail”
 	// in this case you have to recover by “eating”
@@ -32,7 +32,7 @@ recover_from_errors() {
 	// to do this: use yylex() directly.
 }
 
-processCommand() {
+void processCommand() {
 	if(builtin) {
 		do_it();
 	}
