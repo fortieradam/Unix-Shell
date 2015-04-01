@@ -1,9 +1,11 @@
-int command = 0;
+#include "shell.h"
+
+int cmd = 0;
 int builtin = 0;
 char* path = "";
 
 void shell_init() {
-	// init all variables.
+	// init all variables
 	// define (allocate storage) for some var/tables
 	// init all tables (e.g., alias table)
 	// get PATH environment variable (use getenv())
@@ -17,10 +19,10 @@ int getCommand() {
 	init_scanner_and_parser();
 	if(yyparse()) {
 		understand_errors();
-		return -1; // update this
+		return ERRORS; // may need to update
 	}
 	else {
-		return 2; // OK
+		return OK;
 	}
 }
 
@@ -28,8 +30,8 @@ void recover_from_errors() {
 	// find out if error occurs in middle of command
 	// that is the command still has a “tail”
 	// in this case you have to recover by “eating”
-	// the rest of the command.
-	// to do this: use yylex() directly.
+	// the rest of the command
+	// to do this: use yylex() directly
 }
 
 void processCommand() {
@@ -73,12 +75,12 @@ void execute_it() {
 	}
 
 	// check io file existence in case of io-redirection
-	if(check_in_file() == -1) { // SYSERR
-		printf("Can't read from file");
+	if(check_in_file() == SYSERR) {
+		printf("Can't read from: %s", srcf);
 		return;
 	}
-	if(check_out_file() == -1) { // SYSERR
-		printf("Can't write to file");
+	if(check_out_file() == SYSERR) {
+		printf("Can't write to: %s", distf);
 		return;
 	}
 
@@ -88,16 +90,16 @@ void execute_it() {
 
 void main() {
 	shell_init();
-	while(1) {
+	while(TRUE) {
 		printPrompt();
-		command = getCommand();
-		switch (command) {
-			case 0:		exit(); // BYE
-						break;
-			case 1:		recover_from_errors(); // ERRORS
-						break;
-			case 2:		processCommand(); // OK
-						break;
+		cmd = getCommand();
+		switch (cmd) {
+			case BYE:		exit();
+							break;
+			case ERRORS:	recover_from_errors();
+							break;
+			case OK:		processCommand();
+							break;
 		}
 	}
 	/*
