@@ -1,4 +1,6 @@
 #include "shell.h"
+#include <stdio.h>
+#include <stdlib.h>
 
 int cmd = 0;
 int builtin = 0;
@@ -16,6 +18,7 @@ void shell_init() {
 }
 
 int getCommand() {
+	/*
 	init_scanner_and_parser();
 	if(yyparse()) {
 		understand_errors();
@@ -24,6 +27,7 @@ int getCommand() {
 	else {
 		return OK;
 	}
+	*/
 }
 
 void recover_from_errors() {
@@ -34,22 +38,15 @@ void recover_from_errors() {
 	// to do this: use yylex() directly
 }
 
-void processCommand() {
-	if(builtin) {
-		do_it();
-	}
-	else {
-		execute();
-	}
-}
-
 void do_it() {
+	/*
 	switch(builtin) {
 		case 3:	gohome(); 		// CDHome
 				break;
 		case 4:	chdir(path);	// CDPath
 				break;
 	}
+	*/
 	/*
 	switch (builtin) {
 		case CDHome … //gohome();
@@ -63,7 +60,9 @@ void do_it() {
 	*/
 }
 
+
 void execute_it() {
+	/*
 	// handle command execution, pipelining, i/o redirection, and background processing
 	// utilize a command table whose components are plugged in during parsing by yacc
 
@@ -73,7 +72,7 @@ void execute_it() {
 		printf("Command not found");
 		return;
 	}
-
+	/*
 	// check io file existence in case of io-redirection
 	if(check_in_file() == SYSERR) {
 		printf("Can't read from: %s", srcf);
@@ -86,22 +85,39 @@ void execute_it() {
 
 	// build up the pipeline (create and set up pipe end points (using pipe, dup)
 	// process background
+	*/
 }
 
-void main() {
-	shell_init();
+void processCommand() {
+	/*
+	if(builtin) {
+		do_it();
+	}
+	else {
+		execute_it();
+	}
+	*/
+}
+
+
+int main() {
+	//shell_init();
 	while(TRUE) {
+		yyparse();
+		/*
 		printPrompt();
 		cmd = getCommand();
 		switch (cmd) {
-			case BYE:		exit();
+			case BYE:		exit(0);
 							break;
 			case ERRORS:	recover_from_errors();
 							break;
 			case OK:		processCommand();
 							break;
 		}
+		*/
 	}
+	return 0;
 	/*
 	While (1) {
 		printPrompt();
