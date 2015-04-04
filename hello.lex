@@ -6,5 +6,6 @@
 hello		return HELLO;
 bye			return BYE;
 on|off		return STATE;
+cd			return CD;
 \n 			/* ignore end of line */
 %%

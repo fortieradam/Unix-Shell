@@ -18,16 +18,19 @@ void shell_init() {
 }
 
 int getCommand() {
-	/*
-	init_scanner_and_parser();
-	if(yyparse()) {
-		understand_errors();
+	//init_scanner_and_parser();
+	printf("getCommand\n");
+	builtin = yyparse();
+	cmd = builtin;
+	if(cmd) {
+		//understand_errors();
+		printf("ERRORrrr\n");
 		return ERRORS; // may need to update
 	}
 	else {
+		printf("OK\n");
 		return OK;
 	}
-	*/
 }
 
 void recover_from_errors() {
@@ -89,6 +92,7 @@ void execute_it() {
 }
 
 void processCommand() {
+	printf("Test: %d", test);
 	/*
 	if(builtin) {
 		do_it();
@@ -103,9 +107,7 @@ void processCommand() {
 int main() {
 	//shell_init();
 	while(TRUE) {
-		yyparse();
-		/*
-		printPrompt();
+		//printPrompt();
 		cmd = getCommand();
 		switch (cmd) {
 			case BYE:		exit(0);
@@ -115,7 +117,6 @@ int main() {
 			case OK:		processCommand();
 							break;
 		}
-		*/
 	}
 	return 0;
 	/*

@@ -91,3 +91,5 @@ extern int loop;
 #define copystring(a, b)	strcpy((a=(char *)malloc(strlen(b)+1)),b)
 #define mkstr(a)			(char *)makestring(a)
 #define Allocate(t)			(t *)malloc(sizeof(t))
+
+int test;

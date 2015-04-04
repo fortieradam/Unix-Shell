@@ -1,19 +1,19 @@
 %{#include <stdio.h>
 #include <string.h>
-#include <shell.h>
+#include "shell.h"
 
 void yyerror(const char *str){fprintf(stderr,"error: %s\n",str);}
 int yywrap(){return 1;}
 /*main(){yyparse();}*/
 %}
-%token NUMBER HELLO BYE STATE
+%token NUMBER HELLO BYE STATE CD
 %%
 
 commands: /* empty */
 		| commands command;
 
 command:
-		hello_case|bye_case|state_number_case;
+		hello_case|bye_case|state_number_case|cd_case;
 
 hello_case:
 		HELLO 	{printf("\t hello back !! \n");};
@@ -23,3 +23,7 @@ bye_case:
 
 state_number_case:
 		STATE NUMBER 	{printf("\t bye back !! \n");};
+
+cd_case:
+		CD 			{	test = 0;
+						return test;};
