@@ -15,11 +15,12 @@ commands: /* empty */
 		| commands command;
 
 command:
-		cmd|builtin;
+		cmd|builtin|other;
 
-cmd: builtin;
+cmd: 	builtin
+	| 	other;
 
-builtin:	CD STRING	{return 1;}
-		|	PWD			{return 2;};
+builtin:	CD STRING	{return 1;};
 
+other:		PWD			{return 2;};
 

@@ -96,5 +96,5 @@ extern int loop;
 #define Allocate(t)			(t *)malloc(sizeof(t))
 
 
-char path[50];
+char stringArray[50];
 char cwd[50];

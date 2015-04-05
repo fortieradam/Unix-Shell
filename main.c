@@ -12,7 +12,7 @@ void zeroStringArray(char array) {
 	int i = 0;
 	while(i < 50) {
 		if(array == 'p') {
-			path[i] = NULL;
+			stringArray[i] = NULL;
 		}
 		else {
 			cwd[i] = NULL;
@@ -58,7 +58,7 @@ void recover_from_errors() {
 void do_it() {
 	switch(builtin) {
 		case 1:	
-				if(chdir(path) == -1) {
+				if(chdir(stringArray) == -1) {
 					printf("Error: could not cd\n");
 				}
 				else {
