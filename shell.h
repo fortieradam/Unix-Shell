@@ -1,3 +1,6 @@
+#include <string.h>
+
+
 #define TRUE			1
 #define FALSE			0
 
@@ -92,4 +95,5 @@ extern int loop;
 #define mkstr(a)			(char *)makestring(a)
 #define Allocate(t)			(t *)malloc(sizeof(t))
 
-int test;
+
+char path[50];

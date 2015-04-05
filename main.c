@@ -1,10 +1,12 @@
 #include "shell.h"
 #include <stdio.h>
 #include <stdlib.h>
+#include <unistd.h>
 
 int cmd = 0;
 int builtin = 0;
-char* path = "";
+//char* path = "";
+int code = 0;
 
 void shell_init() {
 	// init all variables
@@ -21,15 +23,13 @@ int getCommand() {
 	//init_scanner_and_parser();
 	printf("getCommand\n");
 	builtin = yyparse();
-	cmd = builtin;
-	if(cmd) {
+	if(builtin) {
+		return OK;
+	}
+	else {
 		//understand_errors();
 		printf("ERRORrrr\n");
 		return ERRORS; // may need to update
-	}
-	else {
-		printf("OK\n");
-		return OK;
 	}
 }
 
@@ -42,14 +42,26 @@ void recover_from_errors() {
 }
 
 void do_it() {
-	/*
 	switch(builtin) {
-		case 3:	gohome(); 		// CDHome
+		case 1:	if(chdir(path) == -1) {
+					printf("Error: could not cd\n");
+				}
+				else {
+					printf("successful cd\n");
+				}
 				break;
-		case 4:	chdir(path);	// CDPath
+		case 2: 
+				if(getcwd(path, sizeof(path)) != NULL) {
+				printf("%s\n", path);
+				}
+				else {
+					printf("An error has occurred\n");
+				}
+				break;
+		default:
+				printf("unrecognizd command\n");
 				break;
 	}
-	*/
 	/*
 	switch (builtin) {
 		case CDHome … //gohome();
@@ -92,22 +104,27 @@ void execute_it() {
 }
 
 void processCommand() {
-	printf("Test: %d", test);
-	/*
 	if(builtin) {
 		do_it();
 	}
 	else {
 		execute_it();
 	}
-	*/
 }
 
+void zeroStringArray() {
+	int i = 0;
+	while(i < 50) {
+		path[i] = NULL;
+		i++;
+	}
+}
 
 int main() {
 	//shell_init();
 	while(TRUE) {
 		//printPrompt();
+		zeroStringArray();
 		cmd = getCommand();
 		switch (cmd) {
 			case BYE:		exit(0);

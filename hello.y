@@ -1,29 +1,25 @@
 %{#include <stdio.h>
-#include <string.h>
 #include "shell.h"
 
 void yyerror(const char *str){fprintf(stderr,"error: %s\n",str);}
 int yywrap(){return 1;}
-/*main(){yyparse();}*/
 %}
-%token NUMBER HELLO BYE STATE CD
+%token CD STRING PWD
+%union {
+	char* stringVal;
+}
+%start cmd
 %%
 
 commands: /* empty */
 		| commands command;
 
 command:
-		hello_case|bye_case|state_number_case|cd_case;
+		cmd|builtin;
 
-hello_case:
-		HELLO 	{printf("\t hello back !! \n");};
+cmd: builtin;
 
-bye_case:
-		BYE 	{printf("\t bye back !! \n");};
+builtin:	CD STRING	{printf("%s\n", path); return 1;};
+		|	PWD			{return 2;}
 
-state_number_case:
-		STATE NUMBER 	{printf("\t bye back !! \n");};
 
-cd_case:
-		CD 			{	test = 0;
-						return test;};
