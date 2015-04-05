@@ -97,3 +97,4 @@ extern int loop;
 
 
 char path[50];
+char cwd[50];

@@ -8,6 +8,19 @@ int builtin = 0;
 //char* path = "";
 int code = 0;
 
+void zeroStringArray(char array) {
+	int i = 0;
+	while(i < 50) {
+		if(array == 'p') {
+			path[i] = NULL;
+		}
+		else {
+			cwd[i] = NULL;
+		}
+		i++;
+	}
+}
+
 void shell_init() {
 	// init all variables
 	// define (allocate storage) for some var/tables
@@ -21,7 +34,8 @@ void shell_init() {
 
 int getCommand() {
 	//init_scanner_and_parser();
-	printf("getCommand\n");
+	zeroStringArray('c');
+	printf("Unix-Shell:%s User01$ ", getcwd(cwd, sizeof(cwd)));
 	builtin = yyparse();
 	if(builtin) {
 		return OK;
@@ -43,16 +57,18 @@ void recover_from_errors() {
 
 void do_it() {
 	switch(builtin) {
-		case 1:	if(chdir(path) == -1) {
+		case 1:	
+				if(chdir(path) == -1) {
 					printf("Error: could not cd\n");
 				}
 				else {
-					printf("successful cd\n");
+					//zeroStringArray(c);
+					//getcwd(cwd, sizeof(cwd))
 				}
 				break;
 		case 2: 
-				if(getcwd(path, sizeof(path)) != NULL) {
-				printf("%s\n", path);
+				if(getcwd(cwd, sizeof(cwd)) != NULL) {
+				printf("%s\n", cwd);
 				}
 				else {
 					printf("An error has occurred\n");
@@ -112,19 +128,11 @@ void processCommand() {
 	}
 }
 
-void zeroStringArray() {
-	int i = 0;
-	while(i < 50) {
-		path[i] = NULL;
-		i++;
-	}
-}
-
 int main() {
 	//shell_init();
 	while(TRUE) {
 		//printPrompt();
-		zeroStringArray();
+		zeroStringArray('p');
 		cmd = getCommand();
 		switch (cmd) {
 			case BYE:		exit(0);

@@ -19,7 +19,7 @@ command:
 
 cmd: builtin;
 
-builtin:	CD STRING	{printf("%s\n", path); return 1;};
-		|	PWD			{return 2;}
+builtin:	CD STRING	{return 1;}
+		|	PWD			{return 2;};
 
 
