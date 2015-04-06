@@ -32,13 +32,23 @@ typedef struct comargs {
 } ARGTAB;
 
 /* command line structure */
-typedef struct com {
+/*typedef struct com {
 	char *comname;
 	int remote;
 	int infd;
 	int outfd;
 	int nargs;
 	ARGTAB *atptr;
+} COMMAND;*/
+
+typedef struct com {
+	char* code;
+	int hasPipe;
+	int hasIORed;
+	int infd;
+	int outfd;
+	int numArgs;
+	ARGTAB* argPtr;
 } COMMAND;
 
 /* alias structure */
@@ -88,6 +98,9 @@ extern char srcf[];
 extern char distf[];
 extern int append;
 extern int loop;
+extern void displacedStringArray(int j);
+extern COMMAND* initializeCom(int code, int hasPipe, int hasIORed, int infd, int outfd, int numArgs, ARGTAB* argPtr);
+
 
 #define NIL(x) 				(x *)0
 #define ALL 				NIL(char)
