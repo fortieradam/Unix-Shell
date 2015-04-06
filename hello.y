@@ -4,7 +4,7 @@
 void yyerror(const char *str){fprintf(stderr,"error: %s\n",str);}
 int yywrap(){return 1;}
 %}
-%token CD STRING PWD
+%token CD STRING PWD LS
 %union {
 	char* stringVal;
 }
@@ -21,6 +21,7 @@ cmd: 	builtin
 	| 	other;
 
 builtin:	CD STRING	{return 1;};
+		|	LS			{return 3;};
 
 other:		PWD			{return 2;};
 

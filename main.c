@@ -2,6 +2,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
+#include <dirent.h>
 
 int cmd = 0;
 int builtin = 0;
@@ -55,9 +56,25 @@ void recover_from_errors() {
 	// to do this: use yylex() directly
 }
 
+void list() {
+	struct dirent **namelist;
+	int n = scandir(".", &namelist, NULL, NULL);
+	if (n < 0) {
+		printf("scandir error has occurred\n");
+	}
+	else {
+		int i;
+		for(i = 0; i < n; i++) {
+			printf("%s\n", namelist[i]->d_name);
+			free(namelist[i]);
+		}
+		free(namelist);
+	}
+}
+
 void do_it() {
 	switch(builtin) {
-		case 1:	
+		case 1:	// CD
 				if(chdir(stringArray) == -1) {
 					printf("Error: could not cd\n");
 				}
@@ -66,13 +83,16 @@ void do_it() {
 					//getcwd(cwd, sizeof(cwd))
 				}
 				break;
-		case 2: 
+		case 2: // PWD
 				if(getcwd(cwd, sizeof(cwd)) != NULL) {
 				printf("%s\n", cwd);
 				}
 				else {
 					printf("An error has occurred\n");
 				}
+				break;
+		case 3: // LS
+				list();
 				break;
 		default:
 				printf("unrecognizd command\n");

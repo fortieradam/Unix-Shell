@@ -3,6 +3,7 @@
 #include "shell.h"
 %}
 %%
+ls			return LS;
 pwd			return PWD;
 cd			return CD;
 [a-zA-Z0-9/]+ 	{
