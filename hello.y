@@ -4,7 +4,7 @@
 void yyerror(const char *str){fprintf(stderr,"error: %s\n",str);}
 int yywrap(){return 1;}
 %}
-%token CD STRING PWD LS
+%token CD STRING PWD LS ECHO MKDIR EXIT CDSTRING
 %union {
 	char* stringVal;
 }
@@ -20,8 +20,13 @@ command:
 cmd: 	builtin
 	| 	other;
 
-builtin:	CD STRING	{return 1;};
-		|	LS			{return 3;};
+builtin:	CDSTRING	{return 5;}
+		|	CD   		{return 6;}
+		|	LS			{return 10;}
+		|	EXIT		{return BYE;};
 
-other:		PWD			{return 2;};
+
+other:		PWD				{return 9;}
+		|	ECHO			{return 7;}
+		|	MKDIR STRING 	{return 8;};
 

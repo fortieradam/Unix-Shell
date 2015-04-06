@@ -3,6 +3,7 @@
 #include <stdlib.h>
 #include <unistd.h>
 #include <dirent.h>
+#include <sys/stat.h>
 
 int cmd = 0;
 int builtin = 0;
@@ -38,8 +39,11 @@ int getCommand() {
 	zeroStringArray('c');
 	printf("Unix-Shell:%s User01$ ", getcwd(cwd, sizeof(cwd)));
 	builtin = yyparse();
-	if(builtin) {
+	if(builtin != 4 && builtin != 0) {
 		return OK;
+	}
+	else if (builtin == BYE) {
+		return BYE;
 	}
 	else {
 		//understand_errors();
@@ -72,9 +76,23 @@ void list() {
 	}
 }
 
+void displacedStringArray(int j) {
+	int i = 0;
+	printf("stringArray length: %d\n", strlen(stringArray));
+	while(stringArray[i] != 0 && j != MAXPATH) {
+		stringArray[i] = stringArray[j];
+		i++;
+		j++;
+	}
+}
+
 void do_it() {
 	switch(builtin) {
-		case 1:	// CD
+		case 1:
+				printf("scan error\n");
+				break;
+		case 5:	// CDSTRING
+				displacedStringArray(3);
 				if(chdir(stringArray) == -1) {
 					printf("Error: could not cd\n");
 				}
@@ -83,7 +101,30 @@ void do_it() {
 					//getcwd(cwd, sizeof(cwd))
 				}
 				break;
-		case 2: // PWD
+		case 6:	// CD
+				if(chdir(getenv("HOME")) == -1) {
+					printf("Error: could not cd home");
+				}
+				else {}
+				break;
+		case 7:	// ECHO
+				displacedStringArray(5);
+				if(stringArray[0] != 0) {
+					printf("%s\n", stringArray);
+				}
+				else {
+					printf("could not echo\n");
+				}
+				break;
+		case 8: // MKDIR
+				if(stringArray[0] != 0) {
+					mkdir(stringArray, ACCESSPERMS);
+				}
+				else {
+					printf("no string to mkdir\n");
+				}
+				break;
+		case 9: // PWD
 				if(getcwd(cwd, sizeof(cwd)) != NULL) {
 				printf("%s\n", cwd);
 				}
@@ -91,7 +132,7 @@ void do_it() {
 					printf("An error has occurred\n");
 				}
 				break;
-		case 3: // LS
+		case 10: // LS
 				list();
 				break;
 		default:

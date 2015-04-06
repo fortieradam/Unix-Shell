@@ -6,7 +6,18 @@
 ls			return LS;
 pwd			return PWD;
 cd			return CD;
-[a-zA-Z0-9/]+ 	{
+echo+[a-zA-Z0-9 ]+		{
+							strcpy(stringArray, yytext);
+							return ECHO;
+						}
+mkdir		return MKDIR;
+bye			return EXIT;
+cd+[ ]+[a-zA-Z0-9/]+ {	
+						strcpy(stringArray, yytext);
+						return CDSTRING;
+					}
+[a-zA-Z0-9/]+	{
+					printf("yytext: %s\n", yytext);
 					strcpy(stringArray, yytext);
 					return STRING;
 				}
