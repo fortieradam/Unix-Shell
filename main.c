@@ -61,16 +61,18 @@ void recover_from_errors() {
 	// to do this: use yylex() directly
 }
 
-void list() {
+void list(char* dir) {
 	struct dirent **namelist;
-	int n = scandir(".", &namelist, NULL, NULL);
+	int n = scandir(dir, &namelist, NULL, NULL);
 	if (n < 0) {
-		printf("scandir error has occurred\n");
+		printf("No such file or directory\n", dir);
 	}
 	else {
 		int i;
 		for(i = 0; i < n; i++) {
-			printf("%s\n", namelist[i]->d_name);
+			if(namelist[i]->d_name[0] != '.') { // ignore hidden files
+				printf("%s\n", namelist[i]->d_name);
+			}
 			free(namelist[i]);
 		}
 		free(namelist);
@@ -133,10 +135,16 @@ void do_it() {
 				}
 				break;
 		case 10: // LS
-				list();
+				list(".");
+				break;
+		case 11:
+				displacedStringArray(1);
+				stringArray[0] = '.';
+				stringArray[1] = '/';
+				list(stringArray);
 				break;
 		default:
-				printf("unrecognizd command\n");
+				printf("unrecognized command\n");
 				break;
 	}
 	/*

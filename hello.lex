@@ -6,16 +6,20 @@
 ls			return LS;
 pwd			return PWD;
 cd			return CD;
-echo+[ ]+[a-zA-Z0-9 ]+		{
+ls+[ ]+[a-zA-Z0-9/-_]+	{
+							strcpy(stringArray, yytext);
+							return LSSTRING;
+						}
+echo+[ ]+[a-zA-Z0-9 ]+	{
 							strcpy(stringArray, yytext);
 							return ECHO;
 						}
 mkdir		return MKDIR;
 bye			return EXIT;
-cd+[ ]+[a-zA-Z0-9/]+ {	
-						strcpy(stringArray, yytext);
-						return CDSTRING;
-					}
+cd+[ ]+[a-zA-Z0-9/-_]+ 	{	
+							strcpy(stringArray, yytext);
+							return CDSTRING;
+						}
 [a-zA-Z0-9/]+	{
 					printf("yytext: %s\n", yytext);
 					strcpy(stringArray, yytext);
