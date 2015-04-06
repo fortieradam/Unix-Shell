@@ -7,7 +7,7 @@
 
 int cmd = 0;
 int builtin = 0;
-//char* path = "";
+char* HOME = "";
 int code = 0;
 
 void zeroStringArray(char array) {
@@ -24,6 +24,7 @@ void zeroStringArray(char array) {
 }
 
 void shell_init() {
+	HOME = getenv("HOME");
 	// init all variables
 	// define (allocate storage) for some var/tables
 	// init all tables (e.g., alias table)
@@ -78,7 +79,6 @@ void list() {
 
 void displacedStringArray(int j) {
 	int i = 0;
-	printf("stringArray length: %d\n", strlen(stringArray));
 	while(stringArray[i] != 0 && j != MAXPATH) {
 		stringArray[i] = stringArray[j];
 		i++;
@@ -102,7 +102,7 @@ void do_it() {
 				}
 				break;
 		case 6:	// CD
-				if(chdir(getenv("HOME")) == -1) {
+				if(chdir(HOME) == -1) {
 					printf("Error: could not cd home");
 				}
 				else {}
@@ -190,7 +190,7 @@ void processCommand() {
 }
 
 int main() {
-	//shell_init();
+	shell_init();
 	while(TRUE) {
 		//printPrompt();
 		zeroStringArray('p');

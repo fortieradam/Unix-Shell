@@ -6,7 +6,7 @@
 ls			return LS;
 pwd			return PWD;
 cd			return CD;
-echo+[a-zA-Z0-9 ]+		{
+echo+[ ]+[a-zA-Z0-9 ]+		{
 							strcpy(stringArray, yytext);
 							return ECHO;
 						}
