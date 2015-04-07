@@ -7,8 +7,24 @@
 
 int cmd = 0;
 int builtin = 0;
-char* HOME = "";
 int code = 0;
+COMMAND comtab[MAXCMDS];
+
+/*
+COMMAND initializeCom(char* name, int hasPipe, int hasIRed, int hasORed, int hasAmpersand, int infd, int outfd, int numArgs, char** args){
+	COMMAND command;
+	command.name = name;
+	command.hasPipe = hasPipe;
+	command.hasIRed = hasIRed;
+	command.hasORed = hasORed;
+	command.hasAmpersand = hasAmpersand;
+	command.infd = infd;
+	command.outfd = outfd;
+	command.numArgs = numArgs;
+	command.args = args;
+	return command;
+}
+*/
 
 void zeroStringArray(char array) {
 	int i = 0;
@@ -24,7 +40,6 @@ void zeroStringArray(char array) {
 }
 
 void shell_init() {
-	HOME = getenv("HOME");
 	// init all variables
 	// define (allocate storage) for some var/tables
 	// init all tables (e.g., alias table)
@@ -40,7 +55,8 @@ int getCommand() {
 	zeroStringArray('c');
 	printf("Unix-Shell:%s User01$ ", getcwd(cwd, sizeof(cwd)));
 	builtin = yyparse();
-	if(builtin != 4 && builtin != 0) {
+	printf("builtin: %d\n", builtin);
+	if(builtin != 4 && builtin != 0 && builtin != 2) {
 		return OK;
 	}
 	else if (builtin == BYE) {
@@ -60,7 +76,7 @@ void recover_from_errors() {
 	// the rest of the command
 	// to do this: use yylex() directly
 }
-
+/*
 void list(char* dir) {
 	struct dirent **namelist;
 	int n = scandir(dir, &namelist, NULL, NULL);
@@ -77,6 +93,153 @@ void list(char* dir) {
 		}
 		free(namelist);
 	}
+}
+*/
+void zeroArray(char* array) {
+	int index = 0;
+	int temp = strlen(array);
+	while(index < temp) {
+		array[index] = NULL;
+		index++;
+	}
+}
+
+/*
+	This finds the next directory in the PATH environment var.
+
+	return: pathPtr = how far you have gone in the PATH var. Place holder that must be caught and reused in the calling function.
+*/
+
+char* findNextDirPath(char* dir, char* pathPtr, int* count, int size) {
+	int innerBool = TRUE;
+	int index = 0;
+	while(innerBool) {
+		if(*count < size && *pathPtr != ':') {
+			dir[index] = *pathPtr;
+			pathPtr++;
+			index++;
+			(*count)++;
+		}
+		else if(index >= size) {
+			innerBool = FALSE;
+		}
+		else {
+			innerBool = FALSE;
+			pathPtr += 1;
+			return pathPtr;
+		}
+	}
+	return pathPtr;
+}
+
+/*
+	Checks if the given command name is in the directory given.
+
+	return: TRUE or FALSE
+*/
+
+int isInDir(struct dirent **namelist, int numOfElementsInDir, char* command) {
+	int i;
+		for(i = 0; i < numOfElementsInDir; i++) {
+			if(namelist[i]->d_name[0] != '.') { // ignore hidden files
+				if(strcmp(namelist[i]->d_name, command) == 0){
+					return TRUE;
+				}
+			}
+		free(namelist[i]);
+	}
+
+	free(namelist);
+	return FALSE;
+}
+
+
+/*
+	Find the path to the binary given in the command
+	
+	IMPORTANT: foundPath is the where the found path is stored. Use var passed in to access path
+*/
+
+void findComPath(char* foundPath, COMMAND command) {
+	char* path = getenv("PATH");
+	char dir[strlen(path)];
+	char* pathPtr = path;
+	int outerBool = TRUE;
+	int index = 0;
+	int* count = &index;
+	index = 0;
+	int found;
+
+	while(outerBool) {
+
+		zeroArray(dir);
+		
+		pathPtr = findNextDirPath(dir, pathPtr, count, strlen(path));
+
+ 		struct dirent **namelist;
+		int numOfElementsInDir = scandir(dir, &namelist, NULL, NULL);
+
+		if (numOfElementsInDir < 0) {
+			printf("No such file or directory\n");
+		}
+		else if(found = isInDir(namelist, numOfElementsInDir, command.name)){
+			//printf("Found %s in: %s\n", command.name,dir);
+			outerBool = FALSE;
+		}
+	}
+
+	strcat(foundPath, dir);
+}
+
+
+void makeCommandStatement(char* comAndArgs[], COMMAND command, char* comPath) {
+	//use command to get "PATH + command" + "arg1" + "arg2" + "etc" and ret the double ptr
+	comAndArgs[0] = comPath;
+	int index = 1;
+	while(index <= command.numArgs) {
+		printf("HEREEEE\n");
+		comAndArgs[index] = command.args[index - 1];
+		index++;
+	}
+	comAndArgs[index] = NULL;
+
+}
+
+/*
+	Calls necessary functions to find the binary and execute it based on the command structure given. Handles forking and such.
+
+	return: TRUE or FALSE
+*/
+
+int runIt(COMMAND command) {
+
+	int pid = fork();
+	if(pid == -1) {
+		printf("Got Here\n");
+		return -1;
+	}
+	else if(pid > 0) {
+		int status;
+		wait(&status);
+	}
+	else {
+		char comPath[strlen(getenv("PATH"))];
+		char* comAndArgs[MAXARGS];
+		zeroArray(comPath);
+		findComPath(comPath, command);
+		strcat(comPath, "/");
+		strcat(comPath, command.name);
+
+		char executeBinaryStatement[sizeof(comPath)+2];
+		strcpy(executeBinaryStatement, "./");
+		strcat(executeBinaryStatement, comPath);
+		makeCommandStatement(comAndArgs, command, executeBinaryStatement);
+
+		if(execve(comPath, comAndArgs, NULL) == -1) {
+			printf("Here I am\n");
+		}
+	}
+	return 0;
 }
 
 void displacedStringArray(int j) {
@@ -104,7 +267,7 @@ void do_it() {
 				}
 				break;
 		case 6:	// CD
-				if(chdir(HOME) == -1) {
+				if(chdir(getenv("HOME")) == -1) {
 					printf("Error: could not cd home");
 				}
 				else {}
@@ -135,13 +298,16 @@ void do_it() {
 				}
 				break;
 		case 10: // LS
-				list(".");
+				//list(".");
 				break;
 		case 11:
 				displacedStringArray(1);
 				stringArray[0] = '.';
 				stringArray[1] = '/';
-				list(stringArray);
+				//list(stringArray);
+				break;
+		case 12:
+				printf("case 12\n");
 				break;
 		default:
 				printf("unrecognized command\n");
@@ -162,6 +328,9 @@ void do_it() {
 
 
 void execute_it() {
+	if(comtab[0].hasPipe != 1 && comtab[0].hasIRed != 1 && comtab[0].hasORed != 1) {
+		runIt(comtab[0]);
+	}
 	/*
 	// handle command execution, pipelining, i/o redirection, and background processing
 	// utilize a command table whose components are plugged in during parsing by yacc
@@ -189,7 +358,7 @@ void execute_it() {
 }
 
 void processCommand() {
-	if(builtin) {
+	if(builtin !=0 && builtin != -1) {
 		do_it();
 	}
 	else {
@@ -199,6 +368,19 @@ void processCommand() {
 
 int main() {
 	shell_init();
+	COMMAND command;
+	command.name = "ls";
+	command.hasPipe = 0;
+	command.hasIRed = 0;
+	command.hasORed = 0;
+	command.hasAmpersand = 0;
+	command.infd = 0;
+	command.outfd = 0;
+	command.numArgs = 1;
+	char** ptr2 = NULL;
+	command.args[0] = "-alh";
+	char* ptr = NULL;
+	runIt(command);
 	while(TRUE) {
 		//printPrompt();
 		zeroStringArray('p');
