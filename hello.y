@@ -78,7 +78,7 @@ void parseCommand()	{
 }
 
 %}
-%token CD STRING PWD LS ECHO MKDIR EXIT CDSTRING LSSTRING
+%token CD STRING EXIT CDSTRING
 %union {
 	char* stringVal;
 }
@@ -96,13 +96,8 @@ cmd: 	builtin
 
 builtin:	CDSTRING	{return 5;}
 		|	CD   		{return 6;}
-		|	LS			{return 10;}
-		|	LSSTRING	{return 11;}
 		|	EXIT		{return BYE;};
 
 
-other:		PWD				{return 9;}
-		|	ECHO			{return 7;}
-		|	MKDIR STRING 	{return 8;}
-		|	STRING			{parseCommand(); return -1;};
+other:	STRING			{parseCommand(); return -1;};
 

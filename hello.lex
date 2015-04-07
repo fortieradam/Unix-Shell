@@ -3,18 +3,7 @@
 #include "shell.h"
 %}
 %%
-ls			return LS;
-pwd			return PWD;
 cd			return CD;
-ls+[ ]+[a-zA-Z0-9/-_]+	{
-							strcpy(stringArray, yytext);
-							return LSSTRING;
-						}
-echo+[ ]+[a-zA-Z0-9 ]+	{
-							strcpy(stringArray, yytext);
-							return ECHO;
-						}
-mkdir		return MKDIR;
 bye			return EXIT;
 cd+[ ]+[a-zA-Z0-9/-_]+ 	{	
 							strcpy(stringArray, yytext);

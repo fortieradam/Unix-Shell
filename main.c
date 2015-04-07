@@ -234,9 +234,9 @@ int runIt(COMMAND command) {
 		strcpy(executeBinaryStatement, "./");
 		strcat(executeBinaryStatement, comPath);
 		makeCommandStatement(comAndArgs, command, executeBinaryStatement);
-
-		if(execve(comPath, comAndArgs, NULL) == -1) {
-			printf("Here I am\n");
+		int status = execve(comPath, comAndArgs, NULL);
+		if( status == -1) {
+			exit(status);
 		}
 	}
 	return 0;
@@ -271,43 +271,6 @@ void do_it() {
 					printf("Error: could not cd home");
 				}
 				else {}
-				break;
-		case 7:	// ECHO
-				displacedStringArray(5);
-				if(stringArray[0] != 0) {
-					printf("%s\n", stringArray);
-				}
-				else {
-					printf("could not echo\n");
-				}
-				break;
-		case 8: // MKDIR
-				if(stringArray[0] != 0) {
-					mkdir(stringArray, ACCESSPERMS);
-				}
-				else {
-					printf("no string to mkdir\n");
-				}
-				break;
-		case 9: // PWD
-				if(getcwd(cwd, sizeof(cwd)) != NULL) {
-				printf("%s\n", cwd);
-				}
-				else {
-					printf("An error has occurred\n");
-				}
-				break;
-		case 10: // LS
-				//list(".");
-				break;
-		case 11:
-				displacedStringArray(1);
-				stringArray[0] = '.';
-				stringArray[1] = '/';
-				//list(stringArray);
-				break;
-		case 12:
-				printf("case 12\n");
 				break;
 		default:
 				printf("unrecognized command\n");
