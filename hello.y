@@ -1,7 +1,5 @@
 %{#include <stdio.h>
 #include "shell.h"
-#include <assert.h>
-#include <stdlib.h>
 
 void yyerror(const char *str){fprintf(stderr,"error: %s\n",str);}
 int yywrap(){return 1;}
@@ -21,48 +19,62 @@ int isMetaChar(char* c) {
 }
 
 void parseCommand()	{
-	char* pch;
-	printf("Splitting string \"%s\" into tokens:\n", stringArray);
-	pch = strtok(stringArray, " ");
+	char* token;
+	//printf("Splitting string \"%s\" into tokens:\n", stringArray);
+	token = strtok(stringArray, " ");
+	
+	int numCommands = -1;
+	int numArgs = -1;
 	
 	int j = 0;
 	
-	while(pch != NULL) {
-		printf ("pch = %s\n", pch);
+	while(token != NULL) {
+		//printf ("token = %s\n", token);
 		
-		if(!isMetaChar(pch)) {
+		if(!isMetaChar(token)) {
 			if(j == 0) {
-				printf("\tfound command!\n");
+				numCommands++;
+				comtab[numCommands].name = token;
+				//printf("\tcomtab[%d].name = %s\n", numCommands,comtab[numCommands].name);
 				j++;
 			}
 			else {
-				printf("\tfound arg!\n");
+				numArgs++;
+				comtab[numCommands].args[numArgs] = token;
+				//printf("\tcomtab[%d].args[%d] = %s\n", numCommands, numArgs, comtab[numCommands].args[numArgs]);
 			}
 		}
 		else {
-			if(strcmp(pch, "|") == 0) {
-				printf("\tfound pipe!\n");
+			if(strcmp(token, "|") == 0) {
+				comtab[numCommands].hasPipe = TRUE;
+				//printf("\tcomtab[%d].hasPipe = %d\n", numCommands, comtab[numCommands].hasPipe);
 			}
-			if(strcmp(pch, "<") == 0) {
-				printf("\tfound less than!\n");
+			if(strcmp(token, "<") == 0) {
+				comtab[numCommands].hasIRed = TRUE;
+				//printf("\tcomtab[%d].hasIRed = %d\n", numCommands, comtab[numCommands].hasIRed);
 			}
-			if(strcmp(pch, ">") == 0) {
-				printf("\tfound greater than!\n");
+			if(strcmp(token, ">") == 0) {
+				comtab[numCommands].hasORed = TRUE;
+				//printf("\tcomtab[%d].hasORed = %d\n", numCommands, comtab[numCommands].hasORed);
 			}
-			if(strcmp(pch, "&") == 0) {
-				printf("\tfound ampersand!\n");
+			if(strcmp(token, "&") == 0) {
+				//printf("\tfound ampersand!\n");
+				//printf("\tcomtab[%d].hasAmpersand = %d\n", numCommands, comtab[numCommands].hasAmpersand);
 			}
-			if(strcmp(pch, "\"") == 0) {
-				printf("\tfound quote!\n");
+			if(strcmp(token, "\"") == 0) {
+				//printf("\tfound quote!\n");
 			}
-			if(strcmp(pch, "\\") == 0) {
-				printf("\tfound forward slash!\n");
+			if(strcmp(token, "\\") == 0) {
+				//printf("\tfound forward slash!\n");
 			}
 			j = 0;
 		}
 		
-		pch = strtok (NULL, " ");
+		token = strtok (NULL, " ");
 	}
+	
+	numCommands = 0;
+	numArgs = 0;
 }
 
 %}
@@ -92,5 +104,5 @@ builtin:	CDSTRING	{return 5;}
 other:		PWD				{return 9;}
 		|	ECHO			{return 7;}
 		|	MKDIR STRING 	{return 8;}
-		|	STRING			{parseCommand(); return 12;};
+		|	STRING			{parseCommand(); return -1;};
 

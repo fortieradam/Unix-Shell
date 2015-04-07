@@ -23,7 +23,7 @@ cd+[ ]+[a-zA-Z0-9/-_]+ 	{
 [a-zA-Z0-9\_ \|\<\>\&\"\\]+	{
 					/*printf("yytext: %s\n", yytext);*/
 					strcpy(stringArray, yytext);
-					printf("stringArray: %s\n", yytext);
+					//printf("stringArray: %s\n", yytext);
 					return STRING;
 				}
 [ \t]+	/*ignore whitespace*/;
