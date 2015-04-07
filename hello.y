@@ -23,8 +23,8 @@ void parseCommand()	{
 	//printf("Splitting string \"%s\" into tokens:\n", stringArray);
 	token = strtok(stringArray, " ");
 	
-	int numCommands = -1;
-	int numArgs = -1;
+	int currCommandIndex = -1;
+	int currArgsIndex = -1;
 	
 	int j = 0;
 	
@@ -33,33 +33,34 @@ void parseCommand()	{
 		
 		if(!isMetaChar(token)) {
 			if(j == 0) {
-				numCommands++;
-				comtab[numCommands].name = token;
-				//printf("\tcomtab[%d].name = %s\n", numCommands,comtab[numCommands].name);
+				currCommandIndex++;
+				comtab[currCommandIndex].name = token;
+				//printf("\tcomtab[%d].name = %s\n", currCommandIndex,comtab[currCommandIndex].name);
 				j++;
 			}
 			else {
-				numArgs++;
-				comtab[numCommands].args[numArgs] = token;
-				//printf("\tcomtab[%d].args[%d] = %s\n", numCommands, numArgs, comtab[numCommands].args[numArgs]);
+				currArgsIndex++;
+				comtab[currCommandIndex].args[currArgsIndex] = token;
+				comtab[currCommandIndex].numArgs = currArgsIndex + 1;
+				//printf("\tcomtab[%d].args[%d] = %s\n", currCommandIndex, currArgsIndex, comtab[currCommandIndex].args[currArgsIndex]);
 			}
 		}
 		else {
 			if(strcmp(token, "|") == 0) {
-				comtab[numCommands].hasPipe = TRUE;
-				//printf("\tcomtab[%d].hasPipe = %d\n", numCommands, comtab[numCommands].hasPipe);
+				comtab[currCommandIndex].hasPipe = TRUE;
+				//printf("\tcomtab[%d].hasPipe = %d\n", currCommandIndex, comtab[currCommandIndex].hasPipe);
 			}
 			if(strcmp(token, "<") == 0) {
-				comtab[numCommands].hasIRed = TRUE;
-				//printf("\tcomtab[%d].hasIRed = %d\n", numCommands, comtab[numCommands].hasIRed);
+				comtab[currCommandIndex].hasIRed = TRUE;
+				//printf("\tcomtab[%d].hasIRed = %d\n", currCommandIndex, comtab[currCommandIndex].hasIRed);
 			}
 			if(strcmp(token, ">") == 0) {
-				comtab[numCommands].hasORed = TRUE;
-				//printf("\tcomtab[%d].hasORed = %d\n", numCommands, comtab[numCommands].hasORed);
+				comtab[currCommandIndex].hasORed = TRUE;
+				//printf("\tcomtab[%d].hasORed = %d\n", currCommandIndex, comtab[currCommandIndex].hasORed);
 			}
 			if(strcmp(token, "&") == 0) {
 				//printf("\tfound ampersand!\n");
-				//printf("\tcomtab[%d].hasAmpersand = %d\n", numCommands, comtab[numCommands].hasAmpersand);
+				//printf("\tcomtab[%d].hasAmpersand = %d\n", currCommandIndex, comtab[currCommandIndex].hasAmpersand);
 			}
 			if(strcmp(token, "\"") == 0) {
 				//printf("\tfound quote!\n");
@@ -73,8 +74,8 @@ void parseCommand()	{
 		token = strtok (NULL, " ");
 	}
 	
-	numCommands = 0;
-	numArgs = 0;
+	currCommandIndex = 0;
+	currArgsIndex = 0;
 }
 
 %}

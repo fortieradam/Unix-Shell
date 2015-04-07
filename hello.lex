@@ -5,11 +5,11 @@
 %%
 cd			return CD;
 bye			return EXIT;
-cd+[ ]+[a-zA-Z0-9/-_]+ 	{	
+cd+[ ]+[a-zA-Z0-9/\-\_]+ 	{	
 							strcpy(stringArray, yytext);
 							return CDSTRING;
 						}
-[a-zA-Z0-9\_ \|\<\>\&\"\\]+	{
+[a-zA-Z0-9\-\_ \|\<\>\&\"\\]+	{
 					/*printf("yytext: %s\n", yytext);*/
 					strcpy(stringArray, yytext);
 					//printf("stringArray: %s\n", yytext);
