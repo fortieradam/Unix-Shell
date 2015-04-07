@@ -26,22 +26,6 @@
 
 #define REGISTRY		"REGISTRY"
 
-/* command line arguments structure */
-typedef struct comargs {
-	char *args[MAXARGS];
-} ARGTAB;
-
-/* command line structure */
-/*typedef struct com {
-	char *comname;
-	int remote;
-	int infd;
-	int outfd;
-	int nargs;
-	ARGTAB *atptr;
-} COMMAND;*/
-
-int numCommmands;
 
 typedef struct com {
 	char* name;
@@ -52,7 +36,7 @@ typedef struct com {
 	int infd;
 	int outfd;
 	int numArgs;
-	ARGTAB* argPtr;
+	char* args[MAXARGS];
 } COMMAND;
 
 /* alias structure */
@@ -103,7 +87,6 @@ extern char distf[];
 extern int append;
 extern int loop;
 extern void displacedStringArray(int j);
-extern COMMAND* initializeCom(char* name, int hasPipe, int hasIRed, int hasORed, int hasAndpersand, int infd, int outfd, int numArgs, ARGTAB* argPtr);
 
 
 #define NIL(x) 				(x *)0
