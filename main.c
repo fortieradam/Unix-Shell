@@ -105,7 +105,7 @@ void zeroArray(char* array) {
 }
 
 /*
-	This finds the next directory in the PATH environment var.
+	This finds the next directory in the PATH environment var. Copies to dir.
 
 	return: pathPtr = how far you have gone in the PATH var. Place holder that must be caught and reused in the calling function.
 */
@@ -170,6 +170,8 @@ void findComPath(char* foundPath, COMMAND command) {
 	index = 0;
 	int found;
 
+	int temp = 0;
+
 	while(outerBool) {
 
 		zeroArray(dir);
@@ -178,14 +180,21 @@ void findComPath(char* foundPath, COMMAND command) {
 
  		struct dirent **namelist;
 		int numOfElementsInDir = scandir(dir, &namelist, NULL, NULL);
+		printf("Dir: %s\n", dir);
 
 		if (numOfElementsInDir < 0) {
 			printf("No such file or directory\n");
+
+			temp++;
+			if(temp == 24) {
+				break;
+			}
 		}
 		else if(found = isInDir(namelist, numOfElementsInDir, command.name)){
 			//printf("Found %s in: %s\n", command.name,dir);
 			outerBool = FALSE;
 		}
+		printf("com name: %s\n", command.name);
 	}
 
 	strcat(foundPath, dir);
