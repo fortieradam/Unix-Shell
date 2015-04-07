@@ -20,9 +20,10 @@ cd+[ ]+[a-zA-Z0-9/-_]+ 	{
 							strcpy(stringArray, yytext);
 							return CDSTRING;
 						}
-[a-zA-Z0-9/]+	{
-					printf("yytext: %s\n", yytext);
+[a-zA-Z0-9\_ \|\<\>\&\"\\]+	{
+					/*printf("yytext: %s\n", yytext);*/
 					strcpy(stringArray, yytext);
+					printf("stringArray: %s\n", yytext);
 					return STRING;
 				}
 [ \t]+	/*ignore whitespace*/;

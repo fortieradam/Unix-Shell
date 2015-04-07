@@ -41,10 +41,14 @@ typedef struct comargs {
 	ARGTAB *atptr;
 } COMMAND;*/
 
+int numCommmands;
+
 typedef struct com {
-	char* code;
+	char* name;
 	int hasPipe;
-	int hasIORed;
+	int hasIRed;
+	int hasORed;
+	int hasAmpersand;
 	int infd;
 	int outfd;
 	int numArgs;
@@ -99,7 +103,7 @@ extern char distf[];
 extern int append;
 extern int loop;
 extern void displacedStringArray(int j);
-extern COMMAND* initializeCom(int code, int hasPipe, int hasIORed, int infd, int outfd, int numArgs, ARGTAB* argPtr);
+extern COMMAND* initializeCom(char* name, int hasPipe, int hasIRed, int hasORed, int hasAndpersand, int infd, int outfd, int numArgs, ARGTAB* argPtr);
 
 
 #define NIL(x) 				(x *)0
