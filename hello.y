@@ -36,6 +36,7 @@ void parseCommand()	{
 				currCommandIndex++;
 				comtab[currCommandIndex].name = token;
 				//printf("\tcomtab[%d].name = %s\n", currCommandIndex,comtab[currCommandIndex].name);
+				comtab[currCommandIndex].numArgs = 0;
 				j++;
 			}
 			else {

@@ -10,6 +10,31 @@ int builtin = 0;
 int code = 0;
 COMMAND comtab[MAXCMDS];
 
+void clearArgsTab(char* args[]) {
+	int index = 0;
+	while(index < MAXARGS) {
+		args[index] = NULL;
+		index++;
+	}
+}
+
+void clearComTab() {
+	int index = 0;
+	while(index < MAXCMDS) {
+			comtab[index].name = NULL;
+			comtab[index].hasPipe = 0;
+			comtab[index].hasIRed = 0;
+			comtab[index].hasORed = 0;
+			comtab[index].hasAmpersand = 0;
+			comtab[index].infd = 0;
+			comtab[index].outfd = 0;
+			comtab[index].numArgs = 0;
+			clearArgsTab(comtab[index].args);
+			index++;
+	}
+}
+
+
 /*
 COMMAND initializeCom(char* name, int hasPipe, int hasIRed, int hasORed, int hasAmpersand, int infd, int outfd, int numArgs, char** args){
 	COMMAND command;
@@ -55,7 +80,6 @@ int getCommand() {
 	zeroStringArray('c');
 	printf("Unix-Shell:%s User01$ ", getcwd(cwd, sizeof(cwd)));
 	builtin = yyparse();
-	printf("builtin: %d\n", builtin);
 	if(builtin != 4 && builtin != 0 && builtin != 2) {
 		return OK;
 	}
@@ -180,21 +204,17 @@ void findComPath(char* foundPath, COMMAND command) {
 
  		struct dirent **namelist;
 		int numOfElementsInDir = scandir(dir, &namelist, NULL, NULL);
-		printf("Dir: %s\n", dir);
 
-		if (numOfElementsInDir < 0) {
-			printf("No such file or directory\n");
-
+		if (numOfElementsInDir < 0){
 			temp++;
-			if(temp == 24) {
-				break;
+			if(temp == 10) {
+				printf("Invalid command\n");
+				outerBool = FALSE;
 			}
 		}
 		else if(found = isInDir(namelist, numOfElementsInDir, command.name)){
-			//printf("Found %s in: %s\n", command.name,dir);
 			outerBool = FALSE;
 		}
-		printf("com name: %s\n", command.name);
 	}
 
 	strcat(foundPath, dir);
@@ -206,7 +226,6 @@ void makeCommandStatement(char* comAndArgs[], COMMAND command, char* comPath) {
 	comAndArgs[0] = comPath;
 	int index = 1;
 	while(index <= command.numArgs) {
-		printf("HEREEEE\n");
 		comAndArgs[index] = command.args[index - 1];
 		index++;
 	}
@@ -285,17 +304,6 @@ void do_it() {
 				printf("unrecognized command\n");
 				break;
 	}
-	/*
-	switch (builtin) {
-		case CDHome … //gohome();
-		case CDPath … //chdir(path);
-		case ALIAS …
-		case UNALIAS …
-		case SETENV …
-		case PRINTENV …
-		…
-	}
-	*/
 }
 
 
@@ -340,22 +348,10 @@ void processCommand() {
 
 int main() {
 	shell_init();
-	COMMAND command;
-	command.name = "ls";
-	command.hasPipe = 0;
-	command.hasIRed = 0;
-	command.hasORed = 0;
-	command.hasAmpersand = 0;
-	command.infd = 0;
-	command.outfd = 0;
-	command.numArgs = 1;
-	char** ptr2 = NULL;
-	command.args[0] = "-alh";
-	char* ptr = NULL;
-	runIt(command);
 	while(TRUE) {
 		//printPrompt();
 		zeroStringArray('p');
+		clearComTab();
 		cmd = getCommand();
 		switch (cmd) {
 			case BYE:		exit(0);
@@ -367,14 +363,4 @@ int main() {
 		}
 	}
 	return 0;
-	/*
-	While (1) {
-		printPrompt();
-		Switch (CMD = getCommand()) {
-		Case: BYE exit();
-		Case: ERRORS recover_from_errors();
-		Case: OK processCommand();
-		}
-	}
-	*/
 }
