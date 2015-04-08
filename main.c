@@ -4,6 +4,7 @@
 #include <unistd.h>
 #include <dirent.h>
 #include <sys/stat.h>
+#include <fcntl.h>
 
 int cmd = 0;
 int builtin = 0;
@@ -192,7 +193,6 @@ void findComPath(char* foundPath, COMMAND command) {
 	int index = 0;
 	int* count = &index;
 	index = 0;
-	int found;
 
 	int temp = 0;
 
@@ -212,7 +212,7 @@ void findComPath(char* foundPath, COMMAND command) {
 				outerBool = FALSE;
 			}
 		}
-		else if(found = isInDir(namelist, numOfElementsInDir, command.name)){
+		else if(isInDir(namelist, numOfElementsInDir, command.name)){
 			outerBool = FALSE;
 		}
 	}
@@ -308,8 +308,37 @@ void do_it() {
 
 
 void execute_it() {
-	if(comtab[0].hasPipe != 1 && comtab[0].hasIRed != 1 && comtab[0].hasORed != 1) {
+	if(comtab[0].hasPipe != TRUE && comtab[0].hasIRed != TRUE && comtab[0].hasORed != TRUE) {
 		runIt(comtab[0]);
+	}
+	else if(comtab[0].hasORed == TRUE) {
+		if(!comtab[1].name) {
+			printf("No file given for output\n");
+			return;
+		}
+
+		int file = open(comtab[1].name, O_TRUNC | O_WRONLY);
+		int stdoutCopy = dup(1);        // clone stdout to a new descriptor
+
+		if(dup2(file, 1) < 0) {			// change stdout to file
+			printf("Invalid file\n");
+		}
+		runIt(comtab[0]);
+		close(file);                    // stdout is still valid
+
+		if(dup2(stdoutCopy, 1) < 0) {	// change stdout back from the clone
+			printf("dup2() error\n");
+		}
+		close(stdoutCopy);              // close the clone
+	}
+	else if(comtab[0].hasIRed == TRUE) {
+		if(!comtab[1].name) {
+			printf("No file given for input\n");
+			return;
+		}
+
+		int file = open(comtab[1].name, O_RDONLY);
+		close(file);                    // stdin is still valid
 	}
 	/*
 	// handle command execution, pipelining, i/o redirection, and background processing
