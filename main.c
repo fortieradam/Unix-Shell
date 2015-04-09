@@ -302,7 +302,9 @@ void do_it() {
 	}
 }
 
-void handlePipe(/*int* fd_out, int* fd_in*/) {
+
+
+void executePipe() {
 /*
 	printf("HI IM HERE FIRST\n");
 	int fd[2];
@@ -314,6 +316,8 @@ void handlePipe(/*int* fd_out, int* fd_in*/) {
 	pid = fork();//Forking process
 	printf("Forking process: %d\n", pid);
 	*/
+	int stdOut = dup(1);
+	int stdIn = dup(0);
 	int pid;
 	char* buffer;
 	int pipe1[2];
@@ -335,9 +339,11 @@ void handlePipe(/*int* fd_out, int* fd_in*/) {
 		printf("Code Line 314 Errorrrr\n");
 	}
 	else if(pid == 0) {
+		pipeProcess = TRUE;
 		close(pipe1[0]); // close read-end
  		dup2(pipe1[1], 1); // copy write-end over stdout
  		close(pipe1[1]); // close write-end
+ 		//runIt(comtab[currcmd]);
  		execve("/bin/ls", lsTest, NULL);
  		exit(1);
 	}
@@ -351,21 +357,25 @@ void handlePipe(/*int* fd_out, int* fd_in*/) {
 	}
 
 	if (pid == 0) {
-	 // handle connection between first and second child
-	 close(pipe1[1]); // close write-end
-	 dup2(pipe1[0], 0); // copy read-end over stdin
-	 close(pipe1[0]); // close read-end
-	 // handle connection between second child and parent
-	 close(pipe2[0]); // close read-end
-	 dup2(pipe2[1], 1); // copy write-end over stdout
-	 close(pipe2[1]); // close write-end
-	 execve("/usr/bin/grep", grepTest, NULL);
-	 exit(1);
+		// handle connection between first and second child
+		pipeProcess = TRUE;
+		close(pipe1[1]); // close write-end
+		dup2(pipe1[0], 0); // copy read-end over stdin
+		close(pipe1[0]); // close read-end
+		// handle connection between second child and parent
+		close(pipe2[0]); // close read-end
+		dup2(pipe2[1], 1); // copy write-end over stdout
+		close(pipe2[1]); // close write-end
+		//runIt(comtab[currcmd]);
+		execve("/usr/bin/grep", grepTest, NULL);
+		exit(1);
 	}
 
 	close(pipe1[0]);
 	close(pipe1[1]);
 	close(pipe2[1]);
+	dup2(stdOut, 1);
+	dup2(stdIn, 0);
 
 	ret = read(pipe2[0], buffer, 128);
 	if (ret <= 0) {
@@ -373,7 +383,6 @@ void handlePipe(/*int* fd_out, int* fd_in*/) {
 	}
 	buffer[ret] = '\0';
 	printf("%s", buffer);
-
 	/*
 	else if(pid > 0) {
 		/*
@@ -419,12 +428,13 @@ void handlePipe(/*int* fd_out, int* fd_in*/) {
 }
 
 void execute_it() {
-	if(comtab[0].hasPipe != TRUE && comtab[0].hasIRed != TRUE && comtab[0].hasORed != TRUE) {
-		runIt(comtab[0]);
+	if(comtab[currcmd].hasPipe != TRUE && comtab[currcmd].hasIRed != TRUE && comtab[currcmd].hasORed != TRUE) {
+		runIt(comtab[currcmd]);
 	}
 
 	if(comtab[currcmd].hasPipe == TRUE) {
-		handlePipe(/*int* fd_out, int* fd_in, */);
+		printf("GOT HERE\n");
+		executePipe();
 	}
 
 	/*
@@ -463,13 +473,39 @@ void processCommand() {
 }
 
 int main() {
-	shell_init();
+	//if(!pipeProcess) {
+		shell_init();
+		//comtab[0].hasPipe = TRUE;
+		//clearComTab();
+		/*
+		comtab[0].name = "ls";
+		comtab[0].hasPipe = TRUE;
+		comtab[0].hasIRed = FALSE;
+		comtab[0].hasORed = FALSE;
+		comtab[0].infd = 0;
+		comtab[0].outfd = 0;
+		comtab[0].numArgs = 0;
+		clearArgsTab(comtab[0].args);
+
+		comtab[1].name = "grep";
+		comtab[1].hasPipe = FALSE;
+		comtab[1].hasIRed = FALSE;
+		comtab[1].hasORed = FALSE;
+		comtab[1].infd = 0;
+		comtab[1].outfd = 0;
+		comtab[1].numArgs = 1;
+		clearArgsTab(comtab[1].args);
+		comtab[1].args[0] = "h";
+		*/
+		//execute_it();
+	//}
+
 	while(TRUE) {
 		//printPrompt();
 		if(!pipeProcess) {
 			zeroStringArray('p');
 			clearComTab();
-			printf("What the Fuck am I here for!?\n");
+			//printf("What the Fuck am I here for!?\n");
 			cmd = getCommand();
 			switch (cmd) {
 				case BYE:		exit(0);
@@ -481,5 +517,6 @@ int main() {
 			}
 		}
 	}
+
 	return 0;
 }
