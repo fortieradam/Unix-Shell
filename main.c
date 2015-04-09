@@ -10,6 +10,7 @@ int cmd = 0;
 int builtin = 0;
 int code = 0;
 COMMAND comtab[MAXCMDS];
+int currcmd = 0;
 
 void clearArgsTab(char* args[]) {
 	int index = 0;
@@ -337,8 +338,21 @@ void execute_it() {
 			return;
 		}
 
-		int file = open(comtab[1].name, O_RDONLY);
-		close(file);                    // stdin is still valid
+		FILE* file = fopen(comtab[1].name, "r");
+
+		char line[256];
+
+		int currarg = 0;
+		while (fgets(line, sizeof(line), file)) {
+			//printf("%s", line);
+			comtab[0].args[currarg] = line;
+			printf("comtab[0] = %s, args[%d] = %s", comtab[0].name, currarg, comtab[0].args[currarg]);
+			currarg++;
+		}
+		fclose(file);
+
+		//runIt(comtab[0]);
+		//printf("it worked!\n");
 	}
 	/*
 	// handle command execution, pipelining, i/o redirection, and background processing
