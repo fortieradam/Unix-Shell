@@ -4,11 +4,15 @@
 #include <unistd.h>
 #include <dirent.h>
 #include <sys/stat.h>
+#include <sys/wait.h>
+#include <fcntl.h>
 
-int cmd = 0;
-int builtin = 0;
-int code = 0;
+int cmd;
+int builtin;
+int code;
 COMMAND comtab[MAXCMDS];
+int currcmd;
+int pipeProcess = FALSE;
 
 void clearArgsTab(char* args[]) {
 	int index = 0;
@@ -35,22 +39,6 @@ void clearComTab() {
 }
 
 
-/*
-COMMAND initializeCom(char* name, int hasPipe, int hasIRed, int hasORed, int hasAmpersand, int infd, int outfd, int numArgs, char** args){
-	COMMAND command;
-	command.name = name;
-	command.hasPipe = hasPipe;
-	command.hasIRed = hasIRed;
-	command.hasORed = hasORed;
-	command.hasAmpersand = hasAmpersand;
-	command.infd = infd;
-	command.outfd = outfd;
-	command.numArgs = numArgs;
-	command.args = args;
-	return command;
-}
-*/
-
 void zeroStringArray(char array) {
 	int i = 0;
 	while(i < 50) {
@@ -65,6 +53,11 @@ void zeroStringArray(char array) {
 }
 
 void shell_init() {
+	currcmd = 0;
+	cmd = 0;
+	builtin = 0;
+	code = 0;
+	clearComTab();
 	// init all variables
 	// define (allocate storage) for some var/tables
 	// init all tables (e.g., alias table)
@@ -77,8 +70,10 @@ void shell_init() {
 
 int getCommand() {
 	//init_scanner_and_parser();
-	zeroStringArray('c');
-	printf("Unix-Shell:%s User01$ ", getcwd(cwd, sizeof(cwd)));
+	if(!pipeProcess){
+		zeroStringArray('c');
+		printf("Unix-Shell:%s User01$ ", getcwd(cwd, sizeof(cwd)));
+	}
 	builtin = yyparse();
 	if(builtin != 4 && builtin != 0 && builtin != 2) {
 		return OK;
@@ -263,6 +258,7 @@ int runIt(COMMAND command) {
 		strcat(executeBinaryStatement, comPath);
 		makeCommandStatement(comAndArgs, command, executeBinaryStatement);
 		int status = execve(comPath, comAndArgs, NULL);
+		currcmd += 1;
 		if( status == -1) {
 			exit(status);
 		}
@@ -306,11 +302,131 @@ void do_it() {
 	}
 }
 
+void handlePipe(/*int* fd_out, int* fd_in*/) {
+/*
+	printf("HI IM HERE FIRST\n");
+	int fd[2];
+	pipe(fd);
+	int stdout = dup(1);
+	pipeProcess = TRUE;
+	pid_t pid;
+	pid_t parent = getpid();
+	pid = fork();//Forking process
+	printf("Forking process: %d\n", pid);
+	*/
+	int pid;
+	char* buffer;
+	int pipe1[2];
+	int pipe2[2];
+	int ret;
+	char* lsTest[2];
+	lsTest[0] = ".//bin/ls";
+	lsTest[1] = NULL;
+	char* grepTest[3];
+	grepTest[0] = ".//usr/bin/grep";
+	grepTest[1] = "h";
+	grepTest[2] = NULL;
+
+	pipe(pipe1);
+
+	pid = fork(); //first child
+
+	if(pid < 0) {
+		printf("Code Line 314 Errorrrr\n");
+	}
+	else if(pid == 0) {
+		close(pipe1[0]); // close read-end
+ 		dup2(pipe1[1], 1); // copy write-end over stdout
+ 		close(pipe1[1]); // close write-end
+ 		execve("/bin/ls", lsTest, NULL);
+ 		exit(1);
+	}
+
+	pipe(pipe2);
+
+	pid = fork(); //second child
+
+	if (pid < 0) {
+		printf("Fucking Error on Second Child Fork\n");
+	}
+
+	if (pid == 0) {
+	 // handle connection between first and second child
+	 close(pipe1[1]); // close write-end
+	 dup2(pipe1[0], 0); // copy read-end over stdin
+	 close(pipe1[0]); // close read-end
+	 // handle connection between second child and parent
+	 close(pipe2[0]); // close read-end
+	 dup2(pipe2[1], 1); // copy write-end over stdout
+	 close(pipe2[1]); // close write-end
+	 execve("/usr/bin/grep", grepTest, NULL);
+	 exit(1);
+	}
+
+	close(pipe1[0]);
+	close(pipe1[1]);
+	close(pipe2[1]);
+
+	ret = read(pipe2[0], buffer, 128);
+	if (ret <= 0) {
+	 printf("Reading problem!\n");
+	}
+	buffer[ret] = '\0';
+	printf("%s", buffer);
+
+	/*
+	else if(pid > 0) {
+		/*
+		int status;
+		waitpid(pid ,&status, 0);
+		printf("WAITING DONE\n");
+		pipeProcess = FALSE;          // DOES NOT WORK !!!! ONLY FOR ONE PIPE!
+		dup2(fd[0], 0);
+		char* grepTest[2];
+		grepTest[0] = ".//usr/bin/sort";
+		grepTest[1] = NULL;
+		int ret = read(fd[0], buffer, 128);
+		buffer[ret] = NULL;
+		printf("Buffer: %s\n", buffer);
+		//printf("Before execution\n");
+		//execve("/usr/bin/sort", grepTest, NULL);
+		//printf("After execution\n");
+		/*
+		if(dup2(stdout, 1) >= 0){
+			runIt(comtab[currcmd]);
+		}
+	}
+	else {
+		/*
+		printf("CHILD HERE\n");
+		char* test[2];
+		test[0] = ".//bin/ls";
+		test[1] = NULL; 
+		dup2(fd[1], 1);
+		execve("/bin/ls", test, NULL);
+		/*
+		runIt(comtab[currcmd]);
+		dup2(fd[1], 1);
+		exit(0); // exits program... problem
+		/*
+		runIt(comtab[currcmd]);
+		_exit(EXIT_FAILURE);
+
+
+	}
+	*/
+
+}
 
 void execute_it() {
-	if(comtab[0].hasPipe != 1 && comtab[0].hasIRed != 1 && comtab[0].hasORed != 1) {
+	if(comtab[0].hasPipe != TRUE && comtab[0].hasIRed != TRUE && comtab[0].hasORed != TRUE) {
 		runIt(comtab[0]);
 	}
+
+	if(comtab[currcmd].hasPipe == TRUE) {
+		handlePipe(/*int* fd_out, int* fd_in, */);
+	}
+
 	/*
 	// handle command execution, pipelining, i/o redirection, and background processing
 	// utilize a command table whose components are plugged in during parsing by yacc
@@ -350,16 +466,19 @@ int main() {
 	shell_init();
 	while(TRUE) {
 		//printPrompt();
-		zeroStringArray('p');
-		clearComTab();
-		cmd = getCommand();
-		switch (cmd) {
-			case BYE:		exit(0);
-							break;
-			case ERRORS:	recover_from_errors();
-							break;
-			case OK:		processCommand();
-							break;
+		if(!pipeProcess) {
+			zeroStringArray('p');
+			clearComTab();
+			printf("What the Fuck am I here for!?\n");
+			cmd = getCommand();
+			switch (cmd) {
+				case BYE:		exit(0);
+								break;
+				case ERRORS:	recover_from_errors();
+								break;
+				case OK:		processCommand();
+								break;
+			}
 		}
 	}
 	return 0;
