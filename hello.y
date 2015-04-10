@@ -4,15 +4,18 @@
 void yyerror(const char *str){fprintf(stderr,"error: %s\n",str);}
 int yywrap(){return 1;}
 
-int isMetaChar(char* c) {
+int isMetaChar(char c[]) {
 	if(	strcmp(c, "|") 		== 0
 		|| strcmp(c, "|") 	== 0
 		|| strcmp(c, "<") 	== 0
 		|| strcmp(c, ">") 	== 0
 		|| strcmp(c, "&") 	== 0
 		|| strcmp(c, "\"") 	== 0
-		|| strcmp(c, "\\") 	== 0)
+		|| strcmp(c, "\\") 	== 0
+		|| strcmp(c, "<<") 	== 0
+		|| strcmp(c, ">>") 	== 0)
 	{
+		//printf("found meta char\n");
 		return TRUE;
 	}
 	return FALSE;
@@ -68,6 +71,14 @@ void parseCommand()	{
 			}
 			if(strcmp(token, "\\") == 0) {
 				//printf("\tfound forward slash!\n");
+			}
+			if(strcmp(token, "<<") == 0) {
+				comtab[currCommandIndex].hasIRed = TWO;
+				//printf("\tcomtab[%d].hasIRed = %d\n", currCommandIndex, comtab[currCommandIndex].hasIRed);
+			}
+			if(strcmp(token, ">>") == 0) {
+				comtab[currCommandIndex].hasORed = TWO;
+				//printf("\tcomtab[%d].hasORed = %d\n", currCommandIndex, comtab[currCommandIndex].hasORed);
 			}
 			j = 0;
 		}

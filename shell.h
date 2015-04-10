@@ -1,6 +1,6 @@
 #include <string.h>
 
-
+#define TWO				2
 #define TRUE			1
 #define FALSE			0
 
