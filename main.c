@@ -307,22 +307,22 @@ void do_it() {
 	}
 }
 
-void redirect(int oldfd, int newfd) {
-	int stdCopy = dup(newfd);        // clone to a new descriptor
+void redirectAndRun(int oldfd, int newfd) {
+	int stdIOCopy = dup(newfd);       	// clone to a new descriptor
 
-	if(dup2(oldfd, newfd) < 0) {			// change to file
-		printf("Invalid file\n");
+	if(dup2(oldfd, newfd) < 0) {		// change to file
+		printf("Cannot redirect to file\n");
 	}
 
 	runIt(comtab[currcmd]);
 
-	close(oldfd);                    // still valid
+	close(oldfd);
 
-	if(dup2(stdCopy, newfd) < 0) {	// change back from the clone
-		printf("dup2() error\n");
+	if(dup2(stdIOCopy, newfd) < 0) {	// change back from the clone
+		printf("Cannot redirect back to standard IO\n");
 	}
 
-	close(stdCopy);              // close the clone
+	close(stdIOCopy);					// close the clone
 }
 
 void execute_it() {
@@ -332,126 +332,29 @@ void execute_it() {
 	{
 		runIt(comtab[currcmd]);
 	}
+	else if(comtab[currcmd].hasORed && !comtab[currcmd + 1].name) {
+		printf("No file given for output\n");
+		return;
+	}
+	else if(comtab[currcmd].hasIRed && !comtab[currcmd + 1].name) {
+		printf("No file given for input\n");
+		return;
+	}
 	else if(comtab[currcmd].hasORed == TRUE) {
-		if(!comtab[currcmd + 1].name) {
-			printf("No file given for output\n");
-			return;
-		}
-
-		int file = open(comtab[currcmd + 1].name, O_TRUNC | O_RDWR | O_CREAT);
-		redirect(file, 1);
-
-		/*
-		int stdoutCopy = dup(1);        // clone stdout to a new descriptor
-
-		if(dup2(file, 1) < 0) {			// change stdout to file
-			printf("Invalid file\n");
-		}
-		runIt(comtab[currcmd]);
-		close(file);                    // stdout is still valid
-
-		if(dup2(stdoutCopy, 1) < 0) {	// change stdout back from the clone
-			printf("dup2() error\n");
-		}
-		close(stdoutCopy);              // close the clone
-		*/
+		int file = open(comtab[currcmd + 1].name, O_TRUNC | O_WRONLY | O_CREAT, S_IWRITE | S_IREAD);
+		redirectAndRun(file, 1);
 	}
 	else if(comtab[currcmd].hasIRed == TRUE) {
-		if(!comtab[currcmd + 1].name) {
-			printf("No file given for input\n");
-			return;
-		}
-
-		int file = open(comtab[currcmd + 1].name, O_RDWR);
-		redirect(file, 0);
-
-		/*if(!comtab[currcmd + 1].name) {
-			printf("No file given for input\n");
-			return;
-		}
-
-		int file = open(comtab[currcmd + 1].name, O_RDWR);
-		int stdinCopy = dup(0);        	// clone stdin to a new descriptor
-
-		if(dup2(file, 0) < 0) {			// change stdin to file
-			printf("Invalid file\n");
-		}
-		runIt(comtab[currcmd]);
-		close(file);                    // stdin is still valid
-
-		if(dup2(stdinCopy, 0) < 0) {	// change stdin back from the clone
-			printf("dup2() error\n");
-		}
-		close(stdinCopy);              // close the clone*/
-
-		/*
-		FILE* file = fopen(comtab[1].name, "r");
-
-		char line[256];
-
-		int currarg = 0;
-		while (fgets(line, sizeof(line), file)) {
-			//printf("%s", line);
-			comtab[0].args[currarg] = line;
-			printf("comtab[0] = %s, args[%d] = %s", comtab[0].name, currarg, comtab[0].args[currarg]);
-			currarg++;
-		}
-		fclose(file);
-
-		//runIt(comtab[0]);
-		*/
+		int file = open(comtab[currcmd + 1].name, O_RDONLY);
+		redirectAndRun(file, 0);
 	}
 	else if(comtab[currcmd].hasORed == TWO) {
-		printf("has double ORed!\n");
-
-		if(!comtab[currcmd + 1].name) {
-			printf("No file given for output\n");
-			return;
-		}
-
-		int file = open(comtab[currcmd + 1].name, O_APPEND | O_RDWR | O_CREAT);
-		redirect(file, 1);
-		/*
-		int stdoutCopy = dup(1);        // clone stdout to a new descriptor
-
-		if(dup2(file, 1) < 0) {			// change stdout to file
-			printf("Invalid file\n");
-		}
-		runIt(comtab[currcmd]);
-		close(file);                    // stdout is still valid
-
-		if(dup2(stdoutCopy, 1) < 0) {	// change stdout back from the clone
-			printf("dup2() error\n");
-		}
-		close(stdoutCopy);              // close the clone
-
-		return;*/
+		int file = open(comtab[currcmd + 1].name, O_APPEND | O_WRONLY | O_CREAT, S_IWRITE | S_IREAD);
+		redirectAndRun(file, 1);
 	}
 	else if(comtab[currcmd].hasIRed == TWO) {
-		printf("has double IRed!\n");
-
-		if(!comtab[currcmd + 1].name) {
-			printf("No file given for input\n");
-			return;
-		}
-
-		int file = open(comtab[currcmd + 1].name, O_RDWR);
-		redirect(file, 0);
-		/*
-		int stdinCopy = dup(0);        	// clone stdin to a new descriptor
-
-		if(dup2(file, 0) < 0) {			// change stdin to file
-			printf("Invalid file\n");
-		}
-		runIt(comtab[currcmd]);
-		close(file);                    // stdin is still valid
-
-		if(dup2(stdinCopy, 0) < 0) {	// change stdin back from the clone
-			printf("dup2() error\n");
-		}
-		close(stdinCopy);              // close the clone
-
-		return;*/
+		int file = open(comtab[currcmd + 1].name, O_RDONLY);
+		redirectAndRun(file, 0);
 	}
 	/*
 	// handle command execution, pipelining, i/o redirection, and background processing
