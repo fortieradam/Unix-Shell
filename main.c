@@ -15,14 +15,17 @@ int currcmd;
 int pipeProcess = FALSE;
 
 void clearArgsTab(char* args[]) {
+	//printf("Entered clearArgsTab() with PID: %d\n", getpid());
 	int index = 0;
 	while(index < MAXARGS) {
 		args[index] = NULL;
 		index++;
 	}
+	//printf("Exited clearArgsTab() with PID: %d\n", getpid());
 }
 
 void clearComTab() {
+	//printf("Entered clearComTab() with PID: %d\n", getpid());
 	int index = 0;
 	while(index < MAXCMDS) {
 			comtab[index].name = NULL;
@@ -36,10 +39,12 @@ void clearComTab() {
 			clearArgsTab(comtab[index].args);
 			index++;
 	}
+	//printf("Exited clearComTab() with PID: %d\n", getpid());
 }
 
 
 void zeroStringArray(char array) {
+	//printf("Entered zeroStringArray() with PID: %d\n", getpid());
 	int i = 0;
 	while(i < 50) {
 		if(array == 'p') {
@@ -50,14 +55,17 @@ void zeroStringArray(char array) {
 		}
 		i++;
 	}
+	//printf("Exited zeroStringArray() with PID: %d\n", getpid());
 }
 
 void shell_init() {
+	//printf("Entered shell_init() with PID: %d\n", getpid());
 	currcmd = 0;
 	cmd = 0;
 	builtin = 0;
 	code = 0;
 	clearComTab();
+	//printf("Exited shell_init() with PID: %d\n", getpid());
 	// init all variables
 	// define (allocate storage) for some var/tables
 	// init all tables (e.g., alias table)
@@ -70,11 +78,14 @@ void shell_init() {
 
 int getCommand() {
 	//init_scanner_and_parser();
+	//printf("Entered getCommand() with PID: %d\n", getpid());
 	if(!pipeProcess){
 		zeroStringArray('c');
+		printf("Curr Pid: %d\n", getpid());
 		printf("Unix-Shell:%s User01$ ", getcwd(cwd, sizeof(cwd)));
 	}
 	builtin = yyparse();
+	//printf("Exited getCommand() with PID: %d\n", getpid());
 	if(builtin != 4 && builtin != 0 && builtin != 2) {
 		return OK;
 	}
@@ -89,6 +100,8 @@ int getCommand() {
 }
 
 void recover_from_errors() {
+	//printf("Entered recover_from_errors() with PID: %d\n", getpid());
+	//printf("Exited recover_from_errors() with PID: %d\n", getpid());
 	// find out if error occurs in middle of command
 	// that is the command still has a “tail”
 	// in this case you have to recover by “eating”
@@ -115,12 +128,14 @@ void list(char* dir) {
 }
 */
 void zeroArray(char* array) {
+	//printf("Entered zeroArray() with PID: %d\n", getpid());
 	int index = 0;
 	int temp = strlen(array);
 	while(index < temp) {
 		array[index] = NULL;
 		index++;
 	}
+	//printf("Exited zeroArray() with PID: %d\n", getpid());
 }
 
 /*
@@ -130,6 +145,7 @@ void zeroArray(char* array) {
 */
 
 char* findNextDirPath(char* dir, char* pathPtr, int* count, int size) {
+	//printf("Entered findNextDirPath() with PID: %d\n", getpid());
 	int innerBool = TRUE;
 	int index = 0;
 	while(innerBool) {
@@ -148,6 +164,7 @@ char* findNextDirPath(char* dir, char* pathPtr, int* count, int size) {
 			return pathPtr;
 		}
 	}
+	//printf("Exited findNextDirPath() with PID: %d\n", getpid());
 	return pathPtr;
 }
 
@@ -158,6 +175,7 @@ char* findNextDirPath(char* dir, char* pathPtr, int* count, int size) {
 */
 
 int isInDir(struct dirent **namelist, int numOfElementsInDir, char* command) {
+	//printf("Entered isInDir() with PID: %d\n", getpid());
 	int i;
 		for(i = 0; i < numOfElementsInDir; i++) {
 			if(namelist[i]->d_name[0] != '.') { // ignore hidden files
@@ -169,6 +187,7 @@ int isInDir(struct dirent **namelist, int numOfElementsInDir, char* command) {
 	}
 
 	free(namelist);
+	//printf("Exited isInDir() with PID: %d\n", getpid());
 	return FALSE;
 }
 
@@ -180,6 +199,7 @@ int isInDir(struct dirent **namelist, int numOfElementsInDir, char* command) {
 */
 
 void findComPath(char* foundPath, COMMAND command) {
+	//printf("Entered findComPath() with PID: %d\n", getpid());
 	char* path = getenv("PATH");
 	char dir[strlen(path)];
 	char* pathPtr = path;
@@ -213,11 +233,13 @@ void findComPath(char* foundPath, COMMAND command) {
 	}
 
 	strcat(foundPath, dir);
+	//printf("Exited findComPath() with PID: %d\n", getpid());
 }
 
 
 void makeCommandStatement(char* comAndArgs[], COMMAND command, char* comPath) {
 	//use command to get "PATH + command" + "arg1" + "arg2" + "etc" and ret the double ptr
+	//printf("Entered makeCommandStatement() with PID: %d\n", getpid());
 	comAndArgs[0] = comPath;
 	int index = 1;
 	while(index <= command.numArgs) {
@@ -225,7 +247,7 @@ void makeCommandStatement(char* comAndArgs[], COMMAND command, char* comPath) {
 		index++;
 	}
 	comAndArgs[index] = NULL;
-
+	//printf("Exited makeCommandStatement() with PID: %d\n", getpid());
 }
 
 /*
@@ -235,7 +257,7 @@ void makeCommandStatement(char* comAndArgs[], COMMAND command, char* comPath) {
 */
 
 int runIt(COMMAND command) {
-
+	//printf("Entered runIt()) with PID: %d\n", getpid());
 	int pid = fork();
 	if(pid == -1) {
 		printf("Got Here\n");
@@ -263,19 +285,23 @@ int runIt(COMMAND command) {
 			exit(status);
 		}
 	}
+	//printf("Exited runIt() with PID: %d\n", getpid());
 	return 0;
 }
 
 void displacedStringArray(int j) {
+	//printf("Entered displacedStringArray() with PID: %d\n", getpid());
 	int i = 0;
 	while(stringArray[i] != 0 && j != MAXPATH) {
 		stringArray[i] = stringArray[j];
 		i++;
 		j++;
 	}
+	//printf("Exited displacedStringArray() with PID: %d\n", getpid());
 }
 
 void do_it() {
+//	printf("Entered do_it() with PID: %d\n", getpid());
 	switch(builtin) {
 		case 1:
 				printf("scan error\n");
@@ -300,6 +326,7 @@ void do_it() {
 				printf("unrecognized command\n");
 				break;
 	}
+	//printf("Exited do_it() with PID: %d\n", getpid());
 }
 
 
@@ -316,6 +343,7 @@ void executePipe() {
 	pid = fork();//Forking process
 	printf("Forking process: %d\n", pid);
 	*/
+	//printf("Entered executePipe() with PID: %d\n", getpid());
 	int stdOut = dup(1);
 	int stdIn = dup(0);
 	int pid;
@@ -381,8 +409,10 @@ void executePipe() {
 	if (ret <= 0) {
 	 printf("Reading problem!\n");
 	}
+
 	buffer[ret] = '\0';
 	printf("%s", buffer);
+	//printf("Exited executePipe() with PID: %d\n", getpid());
 	/*
 	else if(pid > 0) {
 		/*
@@ -428,7 +458,9 @@ void executePipe() {
 }
 
 void execute_it() {
+	//printf("Entered execute_it() with PID: %d\n", getpid());
 	if(comtab[currcmd].hasPipe != TRUE && comtab[currcmd].hasIRed != TRUE && comtab[currcmd].hasORed != TRUE) {
+		printf("GOT ERE\n");
 		runIt(comtab[currcmd]);
 	}
 
@@ -436,6 +468,7 @@ void execute_it() {
 		printf("GOT HERE\n");
 		executePipe();
 	}
+	//printf("Exited execute_it() with PID: %d\n", getpid());
 
 	/*
 	// handle command execution, pipelining, i/o redirection, and background processing
@@ -464,15 +497,18 @@ void execute_it() {
 }
 
 void processCommand() {
+	//printf("Entered processCommand() with PID: %d\n", getpid());
 	if(builtin !=0 && builtin != -1) {
 		do_it();
 	}
 	else {
 		execute_it();
 	}
+	//printf("Exited processCommand() with PID: %d\n", getpid());
 }
 
 int main() {
+	//printf("Entered main() with PID: %d\n", getpid());
 	//if(!pipeProcess) {
 		shell_init();
 		//comtab[0].hasPipe = TRUE;
@@ -499,24 +535,34 @@ int main() {
 		*/
 		//execute_it();
 	//}
-
-	while(TRUE) {
-		//printPrompt();
-		if(!pipeProcess) {
-			zeroStringArray('p');
-			clearComTab();
-			//printf("What the Fuck am I here for!?\n");
-			cmd = getCommand();
-			switch (cmd) {
-				case BYE:		exit(0);
-								break;
-				case ERRORS:	recover_from_errors();
-								break;
-				case OK:		processCommand();
-								break;
+		while(TRUE) {
+			int status;
+			int pid = fork();
+			if(pid < 0) {
+				printf("Main fork Error\n");
 			}
+			else if(pid == 0) {
+				//printPrompt();
+				if(!pipeProcess) {
+					//printf("Proocess ID: %d\n", getpid());
+					zeroStringArray('p');
+					clearComTab();
+					printf("What the Fuck am I here for!?\n");
+					cmd = getCommand();
+					switch (cmd) {
+						case BYE:		exit(0);
+										break;
+						case ERRORS:	recover_from_errors();
+										break;
+						case OK:		processCommand();
+										break;
+					}
+				}
+				exit(1);//signal and then kill
+			}
+
+			waitpid(pid, &status, NULL);//Parent wait and reloop to fork
 		}
-	}
 
 	return 0;
 }
