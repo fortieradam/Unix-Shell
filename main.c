@@ -287,6 +287,9 @@ int runIt(COMMAND command) {
 		if( status == -1) {
 			exit(status);
 		}
+		else{
+			exit(1);
+		}
 	}
 	//printf("Exited runIt() with PID: %d\n", getpid());
 	return 0;
@@ -320,6 +323,7 @@ void do_it() {
 				}
 				break;
 		case 6:	// CD
+				printf("IM HERE\n");
 				if(chdir(getenv("HOME")) == -1) {
 					printf("Error: could not cd home");
 				}
@@ -347,7 +351,7 @@ void do_it() {
 			glob -- wildcard matching
 */
 
-
+/*
 void executePipe() {
 /*
 	printf("HI IM HERE FIRST\n");
@@ -359,7 +363,7 @@ void executePipe() {
 	pid_t parent = getpid();
 	pid = fork();//Forking process
 	printf("Forking process: %d\n", pid);
-	*/
+	was comment end
 	//printf("Entered executePipe() with PID: %d\n", getpid());
 	pipeProcess = TRUE;
 	int stdOut = dup(1);
@@ -478,9 +482,10 @@ void executePipe() {
 
 
 	}
-	*/
+	was comment end
 
 }
+*/
 
 void fdCommandInit() {
 	//printf("fdCommandInit\n");
@@ -516,6 +521,7 @@ void printFunction() {
 }
 
 void testPipingFunction() {
+	int ret; // NEED
 	pipeProcess = TRUE;
 	//printf("testPipingFunction\n");
 	char* buffer;
@@ -578,16 +584,12 @@ void testPipingFunction() {
 				exit(1);
 			}
 
-			close(pipe1[0]);
-			close(pipe1[1]);
-			close(pipe2[1]);
-			dup2(stdOut, 1);
-			dup2(stdIn, 0);
-
 			currcmd += 2;
 			continuePiping = FALSE;
 		}
 		//printf("wrapper: %d\n", getpid());
+
+		//ret = read(pipe2[0], buffer, 128);
 		exit(1);
 	}
 
@@ -596,7 +598,6 @@ void testPipingFunction() {
 	waitpid(wrapperPID, &status, NULL);
 	//printf("after wait\n");
 	
-	int ret; // NEED
 	//ret = read(pipe2[0], buffer, 128);
 	//printf("BullShit\n");
 	buffer[ret] = '\0'; // NEED
@@ -604,7 +605,14 @@ void testPipingFunction() {
 	//printf("%s", buffer);
 	//printf("Parent: %d\n", getpid());
 	pipeProcess = FALSE;
+
+			close(pipe1[0]);
+			close(pipe1[1]);
+			close(pipe2[1]);
+			dup2(stdOut, 1);
+			dup2(stdIn, 0);
 }
+
 
 void execute_it() {
 	//printf("Entered execute_it() with PID: %d\n", getpid());
@@ -657,7 +665,17 @@ void processCommand() {
 		currcmd += 1;
 	}
 	else {
-		execute_it();
+		int status;
+		int pid = fork();
+		if(pid < 0) {
+			printf("Main fork Error\n");
+		}
+		else if(pid == 0) {
+			execute_it();	
+			exit(1); //signal and then kill
+		}
+
+		waitpid(pid, &status, NULL);
 	}
 	//printf("Exited processCommand() with PID: %d\n", getpid());
 }
@@ -666,6 +684,7 @@ int main() {
 	//printf("Entered main() with PID: %d\n", getpid());
 	//if(!pipeProcess) {
 		shell_init();
+		printf("Master PID: %d\n", getpid());
 		//comtab[0].hasPipe = TRUE;
 		//clearComTab();
 		/*
@@ -691,12 +710,14 @@ int main() {
 		//execute_it();
 	//}
 		while(TRUE) {
+			/*
 			int status;
 			int pid = fork();
 			if(pid < 0) {
 				printf("Main fork Error\n");
 			}
 			else if(pid == 0) {
+				*/
 				//printPrompt();
 				if(!pipeProcess) {
 					printf("Proocess ID: %d\n", getpid());
@@ -714,10 +735,10 @@ int main() {
 										break;
 					}
 				}
-				exit(1);//signal and then kill
-			}
+				//exit(1);//signal and then kill
+			//}
 
-			waitpid(pid, &status, NULL);//Parent wait and reloop to fork
+			//waitpid(pid, &status, NULL);//Parent wait and reloop to fork
 		}
 
 	return 0;
