@@ -26,6 +26,9 @@
 
 #define REGISTRY		"REGISTRY"
 
+/*
+	Try to add bool for is in process for parsing. 
+*/
 
 typedef struct com {
 	char* name;

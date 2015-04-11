@@ -12,6 +12,8 @@ int builtin;
 int code;
 COMMAND comtab[MAXCMDS];
 int currcmd;
+int pipe1[2];
+int pipe2[2];
 int pipeProcess = FALSE;
 
 void clearArgsTab(char* args[]) {
@@ -64,6 +66,8 @@ void shell_init() {
 	cmd = 0;
 	builtin = 0;
 	code = 0;
+	pipe(pipe1);
+	pipe(pipe2);
 	clearComTab();
 	//printf("Exited shell_init() with PID: %d\n", getpid());
 	// init all variables
@@ -81,7 +85,7 @@ int getCommand() {
 	//printf("Entered getCommand() with PID: %d\n", getpid());
 	if(!pipeProcess){
 		zeroStringArray('c');
-		printf("Curr Pid: %d\n", getpid());
+		//printf("Curr Pid: %d\n", getpid());
 		printf("Unix-Shell:%s User01$ ", getcwd(cwd, sizeof(cwd)));
 	}
 	builtin = yyparse();
@@ -265,7 +269,7 @@ int runIt(COMMAND command) {
 	}
 	else if(pid > 0) {
 		int status;
-		wait(&status);
+		waitpid(pid, &status, NULL);
 	}
 	else {
 		char comPath[strlen(getenv("PATH"))];
@@ -280,7 +284,6 @@ int runIt(COMMAND command) {
 		strcat(executeBinaryStatement, comPath);
 		makeCommandStatement(comAndArgs, command, executeBinaryStatement);
 		int status = execve(comPath, comAndArgs, NULL);
-		currcmd += 1;
 		if( status == -1) {
 			exit(status);
 		}
@@ -329,6 +332,20 @@ void do_it() {
 	//printf("Exited do_it() with PID: %d\n", getpid());
 }
 
+/*
+	Create a processing function to abstract the execution of the pipe... Allows for the recursive calling of pipe and the proper handling pf redirection.
+	Command | Comand | Comand < file > file2  < --- Lastly it will be written here.
+								  ^
+								  |
+						This need to be given to the first
+						Command
+
+			Pass to yacc via file or expand alias in yacc
+			forking to background... dont wait for them to finish but ensure they do
+
+
+			glob -- wildcard matching
+*/
 
 
 void executePipe() {
@@ -344,6 +361,7 @@ void executePipe() {
 	printf("Forking process: %d\n", pid);
 	*/
 	//printf("Entered executePipe() with PID: %d\n", getpid());
+	pipeProcess = TRUE;
 	int stdOut = dup(1);
 	int stdIn = dup(0);
 	int pid;
@@ -351,17 +369,19 @@ void executePipe() {
 	int pipe1[2];
 	int pipe2[2];
 	int ret;
+	
 	char* lsTest[2];
 	lsTest[0] = ".//bin/ls";
 	lsTest[1] = NULL;
 	char* grepTest[3];
-	grepTest[0] = ".//usr/bin/grep";
-	grepTest[1] = "h";
+	grepTest[0] = ".//usr/bin/head";
+	grepTest[1] = "-3";
 	grepTest[2] = NULL;
 
 	pipe(pipe1);
 
 	pid = fork(); //first child
+	printf("ProID: %d\n", pid);
 
 	if(pid < 0) {
 		printf("Code Line 314 Errorrrr\n");
@@ -370,8 +390,10 @@ void executePipe() {
 		pipeProcess = TRUE;
 		close(pipe1[0]); // close read-end
  		dup2(pipe1[1], 1); // copy write-end over stdout
- 		close(pipe1[1]); // close write-end
+ 		close(pipe1[1]); // close write-end whaaaaaaaaaaaaaaaa
+ 		//printf("First Command: %s\n", comtab[currcmd].name);
  		//runIt(comtab[currcmd]);
+ 		//currcmd += 1;
  		execve("/bin/ls", lsTest, NULL);
  		exit(1);
 	}
@@ -393,9 +415,11 @@ void executePipe() {
 		// handle connection between second child and parent
 		close(pipe2[0]); // close read-end
 		dup2(pipe2[1], 1); // copy write-end over stdout
-		close(pipe2[1]); // close write-end
+		close(pipe2[1]); // close write-end whaaaaaaaa
+		//printf("CurrentCmd: %d\n", currcmd);
 		//runIt(comtab[currcmd]);
-		execve("/usr/bin/grep", grepTest, NULL);
+		currcmd += 1;
+		execve("/usr/bin/head", grepTest, NULL);
 		exit(1);
 	}
 
@@ -412,6 +436,7 @@ void executePipe() {
 
 	buffer[ret] = '\0';
 	printf("%s", buffer);
+	pipeProcess = FALSE;
 	//printf("Exited executePipe() with PID: %d\n", getpid());
 	/*
 	else if(pid > 0) {
@@ -457,16 +482,145 @@ void executePipe() {
 
 }
 
+void fdCommandInit() {
+	//printf("fdCommandInit\n");
+	int commandsLeft = TRUE;
+	int commandNum = 0;
+	while(commandsLeft) {
+		if(commandNum%2 == 0) {
+			comtab[commandNum].outfd = pipe1[1];
+			comtab[commandNum].infd = pipe2[0];
+		}
+		else {
+			comtab[commandNum].outfd = pipe2[1];
+			comtab[commandNum].infd = pipe1[0];
+		}
+		commandNum += 1;
+		if(comtab[commandNum].name == NULL) {
+			commandsLeft = FALSE;
+		}
+	}
+} 
+
+void printFunction() {
+	printf("tlkcm \n");
+	int commandsLeft = TRUE;
+	int commandNum = 0;
+	while(commandsLeft) {
+		printf("Command %d infd %d outfd %d\n", commandNum, comtab[commandNum].infd, comtab[commandNum].outfd);
+		commandNum += 1;
+		if(comtab[commandNum].name == NULL) {
+			commandsLeft = FALSE;
+		}
+	}
+}
+
+void testPipingFunction() {
+	pipeProcess = TRUE;
+	//printf("testPipingFunction\n");
+	char* buffer;
+	int wrapperPID = fork();
+	int fork1;
+	int fork2;
+
+	int continuePiping = TRUE;
+
+	char* lsTest[2];
+	lsTest[0] = ".//bin/ls";
+	lsTest[1] = NULL;
+	char* grepTest[3];
+	grepTest[0] = ".//usr/bin/head";
+	grepTest[1] = "-3";
+	grepTest[2] = NULL;
+
+	int stdOut = dup(1);
+	int stdIn = dup(0);
+
+	if(wrapperPID < 0) {
+		printf("Error creating piping wrapper process\n");
+	}
+	else if(wrapperPID == 0) {
+		pipeProcess = TRUE;
+		while(continuePiping) {
+			fork1 = fork();
+			if(fork1 < 0) {
+				printf("Error in the creation of the first Fork.\n");
+			}
+			else if(fork1 == 0) {
+				pipeProcess = TRUE;
+				close(comtab[currcmd].infd); // close read-end
+		 		dup2(comtab[currcmd].outfd, 1); // copy write-end over stdout
+		 		close(comtab[currcmd].outfd); // close write-end whaaaaaaaaaaaaaaaa
+		 		//printf("First Command: %s\n", comtab[currcmd].name);
+		 		runIt(comtab[currcmd]);
+		 		//currcmd += 1;
+		 		//execve("/bin/ls", lsTest, NULL);
+		 		exit(1);
+			}
+
+			fork2 = fork();
+			if(fork2 < 0){
+				printf("Error in the creation of the second Fork\n");
+			}
+			else if(fork2 == 0) {
+				pipeProcess = TRUE;
+				// handle connection between first and second child
+				close(comtab[currcmd+1].outfd); // close write-end
+				dup2(comtab[currcmd+1].infd, 0); // copy read-end over stdin
+				close(comtab[currcmd+1].infd); // close read-end
+				// handle connection between second child and parent
+				close(comtab[currcmd+1].infd); // close read-end
+				dup2(comtab[currcmd+1].outfd, 1); // copy write-end over stdout
+				close(comtab[currcmd+1].outfd); // close write-end whaaaaaaaa
+				//printf("CurrentCmd: %d\n", currcmd);
+				runIt(comtab[currcmd+1]);
+				//execve("/usr/bin/head", grepTest, NULL);
+				exit(1);
+			}
+
+			close(pipe1[0]);
+			close(pipe1[1]);
+			close(pipe2[1]);
+			dup2(stdOut, 1);
+			dup2(stdIn, 0);
+
+			currcmd += 2;
+			continuePiping = FALSE;
+		}
+		//printf("wrapper: %d\n", getpid());
+		exit(1);
+	}
+
+	int status;
+	//printf("before wait\n");
+	waitpid(wrapperPID, &status, NULL);
+	//printf("after wait\n");
+	
+	int ret; // NEED
+	//ret = read(pipe2[0], buffer, 128);
+	//printf("BullShit\n");
+	buffer[ret] = '\0'; // NEED
+	//printf("End of piping function\n");
+	//printf("%s", buffer);
+	//printf("Parent: %d\n", getpid());
+	pipeProcess = FALSE;
+}
+
 void execute_it() {
 	//printf("Entered execute_it() with PID: %d\n", getpid());
 	if(comtab[currcmd].hasPipe != TRUE && comtab[currcmd].hasIRed != TRUE && comtab[currcmd].hasORed != TRUE) {
-		printf("GOT ERE\n");
+		//printf("GOT ERE\n");
 		runIt(comtab[currcmd]);
 	}
 
 	if(comtab[currcmd].hasPipe == TRUE) {
-		printf("GOT HERE\n");
-		executePipe();
+		//printf("That's a nice pipe you got there...\n");
+		fdCommandInit();
+		testPipingFunction();
+		//printf("Post execution\n");
+		//printFunction();
+		//testPipingFunction();
+		//executePipe();
 	}
 	//printf("Exited execute_it() with PID: %d\n", getpid());
 
@@ -500,6 +654,7 @@ void processCommand() {
 	//printf("Entered processCommand() with PID: %d\n", getpid());
 	if(builtin !=0 && builtin != -1) {
 		do_it();
+		currcmd += 1;
 	}
 	else {
 		execute_it();
@@ -544,10 +699,11 @@ int main() {
 			else if(pid == 0) {
 				//printPrompt();
 				if(!pipeProcess) {
-					//printf("Proocess ID: %d\n", getpid());
+					printf("Proocess ID: %d\n", getpid());
+					currcmd = 0;
 					zeroStringArray('p');
 					clearComTab();
-					printf("What the Fuck am I here for!?\n");
+					//printf("What the Fuck am I here for!?\n");
 					cmd = getCommand();
 					switch (cmd) {
 						case BYE:		exit(0);
