@@ -11,6 +11,26 @@ int builtin = 0;
 int code = 0;
 COMMAND comtab[MAXCMDS];
 int currcmd = 0;
+MYALIAS aliastab[MAXALIAS];
+
+void clearAliasTab() {
+	int index;
+	for(index = 0; index < MAXALIAS; index++) {
+		aliastab[index].used = 0;
+		aliastab[index].name = NULL;
+		aliastab[index].str = NULL;
+	}
+}
+
+int aliasExists(char alias[]) {
+	int i;
+	for(i = 0; i < MAXALIAS; i++) {
+		if(strcmp(aliastab[i].name, alias)) {
+			return TRUE;
+		}
+	}
+	return FALSE;
+}
 
 void clearArgsTab(char* args[]) {
 	int index = 0;
@@ -67,6 +87,7 @@ void zeroStringArray(char array) {
 }
 
 void shell_init() {
+	clearAliasTab();
 	// init all variables
 	// define (allocate storage) for some var/tables
 	// init all tables (e.g., alias table)

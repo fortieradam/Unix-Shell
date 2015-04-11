@@ -11,6 +11,18 @@ int isQuote(char c) {
 	return FALSE;
 }
 
+int hasQuote(char c[]) {
+	int length = strlen(c);
+	int numQuotes = 0;
+	int i;
+	for(i = 0; i < length; i++) {
+		if(isQuote(c[i])) {
+			numQuotes++;
+		}
+	}
+	return numQuotes;
+}
+
 int isMetaChar(char c[]) {
 	if(	strcmp(c, "|") 		== 0
 		|| strcmp(c, "|") 	== 0
@@ -37,6 +49,7 @@ void parseCommand()	{
 	int currArgsIndex = -1;
 	
 	int j = 0;
+	int k = 0;
 	
 	while(token != NULL) {
 		//printf ("token = %s\n", token);
@@ -45,15 +58,52 @@ void parseCommand()	{
 			if(j == 0) {
 				currCommandIndex++;
 				comtab[currCommandIndex].name = token;
-				//printf("\tcomtab[%d].name = %s\n", currCommandIndex,comtab[currCommandIndex].name);
+				printf("\tcomtab[%d].name = %s\n", currCommandIndex, comtab[currCommandIndex].name);
 				comtab[currCommandIndex].numArgs = 0;
 				j++;
+			}
+			else if(hasQuote(token) == 1) {
+				char quotedString[500];
+				char* space = " ";
+				
+				while(token != NULL) {
+					if(k > 0) {
+						strcat(quotedString, space);
+						//printf("hit\n");
+					}
+					strcat(quotedString, token);
+					
+					printf("\t\ttoken = %s\n", token);
+					printf("\t\tquotedString = %s\n", quotedString);
+					
+					token = strtok(NULL, " ");
+					if(token == NULL || hasQuote(token) == 1) {
+						strcat(quotedString, space);
+						strcat(quotedString, token);
+						
+						printf("\t\ttoken = %s\n", token);
+						printf("\t\tquotedString = %s\n", quotedString);
+						
+						/*currArgsIndex++;
+						comtab[currCommandIndex].args[currArgsIndex] = quotedString;
+						comtab[currCommandIndex].numArgs = currArgsIndex + 1;
+						printf("\tcomtab[%d].args[%d] = %s\n", currCommandIndex, currArgsIndex, comtab[currCommandIndex].args[currArgsIndex]);*/
+						
+						break;
+					}
+					k++;
+				}
+				
+				currArgsIndex++;
+				comtab[currCommandIndex].args[currArgsIndex] = quotedString;
+				comtab[currCommandIndex].numArgs = currArgsIndex + 1;
+				printf("\tcomtab[%d].args[%d] = %s\n", currCommandIndex, currArgsIndex, comtab[currCommandIndex].args[currArgsIndex]);
 			}
 			else {
 				currArgsIndex++;
 				comtab[currCommandIndex].args[currArgsIndex] = token;
 				comtab[currCommandIndex].numArgs = currArgsIndex + 1;
-				//printf("\tcomtab[%d].args[%d] = %s\n", currCommandIndex, currArgsIndex, comtab[currCommandIndex].args[currArgsIndex]);
+				printf("\tcomtab[%d].args[%d] = %s\n", currCommandIndex, currArgsIndex, comtab[currCommandIndex].args[currArgsIndex]);
 			}
 		}
 		else {
@@ -89,8 +139,9 @@ void parseCommand()	{
 			}
 			j = 0;
 		}
-		
-		token = strtok (NULL, " ");
+		if(token != NULL) {
+			token = strtok (NULL, " ");
+		}
 	}
 }
 

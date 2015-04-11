@@ -40,11 +40,11 @@ typedef struct com {
 } COMMAND;
 
 /* alias structure */
-struct alias {
+typedef struct alias {
 	int used;
-	char *alname;
-	char *alstr;
-};
+	char *name;
+	char *str;
+} MYALIAS;
 
 /* cache table structure */
 typedef struct cache {
@@ -53,7 +53,8 @@ typedef struct cache {
 } CACHE;
 
 /* externals */
-extern struct alias aliastab[];
+//extern struct alias aliastab[];
+extern MYALIAS aliastab[];
 extern COMMAND comtab[];
 extern CACHE cachetab[];
 extern char *pathtab[];
