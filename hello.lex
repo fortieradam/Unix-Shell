@@ -3,19 +3,28 @@
 #include "shell.h"
 %}
 %%
-cd			return CD;
-bye			return EXIT;
+alias				return ALIAS;
+cd					return CD;
+bye					return EXIT;
+alias+[ ]+[a-zA-Z]+	{
+						strcpy(stringArray, yytext);
+						return ALIASALIAS;
+					}
+alias+[ ]+[a-zA-Z]+[ ]+[\"]+[a-zA-Z0-9/\.\-\_ \|\<\>\&\"\\]++[\"]	{
+																		strcpy(stringArray, yytext);
+																		return ALIASSTRING;
+																	}
 cd+[ ]+[a-zA-Z0-9/\-\_]+ 	{	
-							strcpy(stringArray, yytext);
-							return CDSTRING;
-						}
+								strcpy(stringArray, yytext);
+								return CDSTRING;
+							}
 [a-zA-Z0-9/\.\-\_ \|\<\>\&\"\\]+	{
-					/*printf("yytext: %s\n", yytext);*/
-					strcpy(stringArray, yytext);
-					//printf("stringArray: %s\n", yytext);
-					return STRING;
-				}
+										/*printf("yytext: %s\n", yytext);*/
+										strcpy(stringArray, yytext);
+										//printf("stringArray: %s\n", yytext);
+										return STRING;
+									}
 [ \t]+	/*ignore whitespace*/;
 
-\n 			/* ignore end of line */
+\n 		/* ignore end of line */
 %%

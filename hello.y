@@ -4,13 +4,20 @@
 void yyerror(const char *str){fprintf(stderr,"error: %s\n",str);}
 int yywrap(){return 1;}
 
+int isQuote(char c) {
+	if(c == '\"') {
+		return TRUE;
+	}
+	return FALSE;
+}
+
 int isMetaChar(char c[]) {
 	if(	strcmp(c, "|") 		== 0
 		|| strcmp(c, "|") 	== 0
 		|| strcmp(c, "<") 	== 0
 		|| strcmp(c, ">") 	== 0
 		|| strcmp(c, "&") 	== 0
-		|| strcmp(c, "\"") 	== 0
+		//|| strcmp(c, "\"") 	== 0
 		|| strcmp(c, "\\") 	== 0
 		|| strcmp(c, "<<") 	== 0
 		|| strcmp(c, ">>") 	== 0)
@@ -85,13 +92,10 @@ void parseCommand()	{
 		
 		token = strtok (NULL, " ");
 	}
-	
-	currCommandIndex = 0;
-	currArgsIndex = 0;
 }
 
 %}
-%token CD STRING EXIT CDSTRING
+%token CD STRING EXIT CDSTRING ALIAS ALIASALIAS ALIASSTRING
 %union {
 	char* stringVal;
 }
@@ -109,8 +113,9 @@ cmd: 	builtin
 
 builtin:	CDSTRING	{return 5;}
 		|	CD   		{return 6;}
+		|	ALIASALIAS	{printf("caught aliasalias!\n"); return 7;}
+		|	ALIASSTRING	{printf("caught aliasstring!\n"); return 8;}
+		|	ALIAS		{printf("caught alias!\n"); return 9;}
 		|	EXIT		{return BYE;};
 
-
 other:	STRING			{parseCommand(); return -1;};
-
