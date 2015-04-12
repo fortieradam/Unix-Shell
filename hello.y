@@ -4,8 +4,6 @@
 void yyerror(const char *str){fprintf(stderr,"error: %s\n",str);}
 int yywrap(){return 1;}
 
-char quotedString[500];
-
 int isQuote(char c) {
 	if(c == '\"') {
 		return TRUE;
@@ -149,7 +147,7 @@ void addAlias() {
 	
 	char* token;
 	token = strtok(stringArray, " "); // token is now "alias"
-	token = strtok(NULL, " ");
+	token = strtok(NULL, " "); // token is now the alias name
 	
 	if(isAlias(token) == TRUE) {
 		printf("Alias is already taken");
@@ -212,8 +210,17 @@ int findNextAliasIndex() {
 	return -1;
 }
 
+void setNewEnv() {
+	char name[500];
+	char* token;
+	token = strtok(stringArray, " "); // token is now "setenv"
+	token = strtok(NULL, " "); // token is now the setenv name
+	
+	strcpy(name, token);
+}
+
 %}
-%token CD STRING EXIT CDSTRING ALIAS ALIASSTRING ALIASCOMMAND
+%token CD STRING EXIT CDSTRING ALIAS ALIASSTRING ALIASCOMMAND UNALIAS SETENV PRINTENV
 %start cmd
 %%
 
@@ -225,6 +232,9 @@ builtin:	CDSTRING		{return 5;}
 		|	ALIASCOMMAND	{addAlias(); return 9;}
 		|	ALIASSTRING		{addAlias(); return 7;}
 		|	ALIAS			{printAliases(); return 8;}
+		|	UNALIAS			{return 10;}
+		|	SETENV			{setNewEnv(); return 11;}
+		|	PRINTENV		{return 12;}
 		|	EXIT			{return BYE;};
 
 other:	STRING				{parseCommand(); return -1;};

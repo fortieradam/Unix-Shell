@@ -6,10 +6,19 @@
 alias				return ALIAS;
 cd					return CD;
 bye					return EXIT;
+printenv			return PRINTENV;
+unalias+[ ]+[a-zA-Z]+	{
+							strcpy(stringArray, yytext);
+							return UNALIAS;
+						}
+setenv+[ ]+[a-zA-Z]++[ ]+[a-zA-Z0-9/\.\-\_ \|\<\>\&\"\\\~]+	{
+																strcpy(stringArray, yytext);
+																return SETENV;
+															}
 alias+[ ]+[a-zA-Z]++[ ]+[a-zA-Z]+	{
-									strcpy(stringArray, yytext);
-									return ALIASCOMMAND;
-								}		
+										strcpy(stringArray, yytext);
+										return ALIASCOMMAND;
+									}		
 alias+[ ]+[a-zA-Z]++[ ]+[\"]+[a-zA-Z0-9/\.\-\_ \|\<\>\&\"\\]++[\"]	{
 																		strcpy(stringArray, yytext);
 																		return ALIASSTRING;

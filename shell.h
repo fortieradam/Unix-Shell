@@ -96,6 +96,6 @@ extern void displacedStringArray(int j);
 #define mkstr(a)			(char *)makestring(a)
 #define Allocate(t)			(t *)malloc(sizeof(t))
 
-
+char quotedString[500];
 char stringArray[MAXPATH];
 char cwd[MAXPATH];

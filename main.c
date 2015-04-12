@@ -13,6 +13,13 @@ COMMAND comtab[MAXCMDS];
 int currcmd = 0;
 MYALIAS aliastab[MAXALIAS];
 
+void clearQuotedString() {
+	int index;
+	for(index = 0; index < 500; index++) {
+		quotedString[index] = '\0';
+	}
+}
+
 void clearAliasTab() {
 	int index;
 	for(index = 0; index < MAXALIAS; index++) {
@@ -67,10 +74,10 @@ void zeroStringArray(char array) {
 	int i = 0;
 	while(i < 50) {
 		if(array == 'p') {
-			stringArray[i] = NULL;
+			stringArray[i] = '\0';
 		}
-		else {
-			cwd[i] = NULL;
+		else if(array == 'c') {
+			cwd[i] = '\0';
 		}
 		i++;
 	}
@@ -136,7 +143,7 @@ void zeroArray(char* array) {
 	int index = 0;
 	int temp = strlen(array);
 	while(index < temp) {
-		array[index] = NULL;
+		array[index] = '\0';
 		index++;
 	}
 }
@@ -320,6 +327,14 @@ void do_it() {
 				break;
 		case 9: //ALIASCOMMAND
 				//printf("found alias command!\n");
+				break;
+		case 10://UNALIAS
+				break;
+		case 11://SETENV
+				break;
+		case 12://PRINTENV
+				break;
+		case 13://UNSETENV
 				break;
 		default:
 				printf("unrecognized command\n");
