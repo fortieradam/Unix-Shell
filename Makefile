@@ -1,10 +1,6 @@
-CC = gcc
-CFLAGS = -g -Wall
-
 default: shell
 
-shell:  lex yacc lex.yy.o y.tab.o main.o
-	$(CC) -o shell lex.yy.o y.tab.o main.o
+shell: lex yacc main
 
 lex:
 	flex hello.lex
@@ -12,20 +8,14 @@ lex:
 yacc:
 	bison -dy hello.y
 
-lex.yy.o:  lex.yy.c y.tab.h shell.h
-	$(CC) -c lex.yy.c
+main:
+	gcc lex.yy.c y.tab.c main.c -o shell
 
-y.tab.o:  y.tab.c shell.h
-	$(CC) -c y.tab.c
-
-main.o:  main.c shell.h
-	$(CC) -c main.c
-
-run:  shell
+run: shell
 	./shell
 
 clean:
-	$(RM) shell *.o *~
+	rm shell lex.yy.c y.tab.c y.tab.h
 
 zip:
 	zip -r shell.zip main.c hello.lex hello.y shell.h Makefile README.txt
