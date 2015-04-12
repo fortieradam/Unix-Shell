@@ -84,11 +84,6 @@ void parseCommand()	{
 						printf("\t\ttoken = %s\n", token);
 						printf("\t\tquotedString = %s\n", quotedString);
 						
-						/*currArgsIndex++;
-						comtab[currCommandIndex].args[currArgsIndex] = quotedString;
-						comtab[currCommandIndex].numArgs = currArgsIndex + 1;
-						printf("\tcomtab[%d].args[%d] = %s\n", currCommandIndex, currArgsIndex, comtab[currCommandIndex].args[currArgsIndex]);*/
-						
 						break;
 					}
 					k++;
@@ -145,8 +140,99 @@ void parseCommand()	{
 	}
 }
 
+void printAliases() {
+	int index;
+	for(index = 0; index < MAXALIAS; index++) {
+		if(aliastab[index].name != NULL) {
+			printf("%s\t\t", aliastab[index].name);
+			printf("%s\n", aliastab[index].str);
+		}
+	}
+}
+
+void addAlias() {
+	int index = findNextAliasIndex();
+	
+	char* token;
+	//printf("Splitting string \"%s\" into tokens:\n", stringArray);
+	
+	token = strtok(stringArray, " "); // token is now "alias"
+	token = strtok(NULL, " ");
+	
+	//printf("token = %s\n", token);
+	
+	if(isAlias(token)) {
+		printf("Alias is already taken");
+		return;
+	}
+	aliastab[index].name = token;
+	
+	printf("aliastab[%d].name = %s\n", index, aliastab[index].name);
+	
+	token = strtok(NULL, " "); // token is now the alias string
+	
+	int k = 0;
+	char quotedString[500];
+	char* space = " ";
+	
+	if(hasQuote(token) == 1) {
+		while(token != NULL) {
+			if(k > 0) {
+				strcat(quotedString, space);
+				//printf("hit\n");
+			}
+			strcat(quotedString, token);
+			
+			//printf("\t\ttoken = %s\n", token);
+			//printf("\t\tquotedString = %s\n", quotedString);
+			
+			token = strtok(NULL, " ");
+			if(token == NULL || hasQuote(token) == 1) {
+				strcat(quotedString, space);
+				strcat(quotedString, token);
+				
+				//printf("\t\ttoken = %s\n", token);
+				//printf("\t\tquotedString = %s\n", quotedString);
+				
+				break;
+			}
+			k++;
+		}
+		aliastab[index].str = quotedString;
+		printf("aliastab[%d].str = %s\n", index, aliastab[index].str);
+	}
+	else {
+		aliastab[index].str = token;
+		printf("aliastab[%d].str = %s\n", index, aliastab[index].str);
+		return;
+	}
+}
+
+int isAlias(char* alias) {
+	int index;
+	for(index = 0; index < MAXALIAS; index++) {
+		if(aliastab[index].name == NULL) {
+			//do nothing
+		}
+		else if(strcmp(aliastab[index].name, alias)) {
+			return TRUE;
+		}
+	}
+	return FALSE;
+}
+
+int findNextAliasIndex() {
+	int index;
+	for(index = 0; index < MAXALIAS; index++) {
+		if(aliastab[index].name == NULL) {
+			return index;
+		}
+	}
+	return -1;
+}
+
 %}
-%token CD STRING EXIT CDSTRING ALIAS ALIASALIAS ALIASSTRING
+%token CD STRING EXIT CDSTRING ALIAS ALIASSTRING ALIASCOMMAND
 %union {
 	char* stringVal;
 }
@@ -162,11 +248,11 @@ command:
 cmd: 	builtin
 	| 	other;
 
-builtin:	CDSTRING	{return 5;}
-		|	CD   		{return 6;}
-		|	ALIASALIAS	{printf("caught aliasalias!\n"); return 7;}
-		|	ALIASSTRING	{printf("caught aliasstring!\n"); return 8;}
-		|	ALIAS		{printf("caught alias!\n"); return 9;}
-		|	EXIT		{return BYE;};
+builtin:	CDSTRING		{return 5;}
+		|	CD   			{return 6;}
+		|	ALIASCOMMAND	{addAlias(); return 9;}
+		|	ALIASSTRING		{addAlias(); return 7;}
+		|	ALIAS			{printAliases(); return 8;}
+		|	EXIT			{return BYE;};
 
-other:	STRING			{parseCommand(); return -1;};
+other:	STRING				{parseCommand(); return -1;};

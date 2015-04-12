@@ -16,20 +16,10 @@ MYALIAS aliastab[MAXALIAS];
 void clearAliasTab() {
 	int index;
 	for(index = 0; index < MAXALIAS; index++) {
-		aliastab[index].used = 0;
+		aliastab[index].used = FALSE;
 		aliastab[index].name = NULL;
 		aliastab[index].str = NULL;
 	}
-}
-
-int aliasExists(char alias[]) {
-	int i;
-	for(i = 0; i < MAXALIAS; i++) {
-		if(strcmp(aliastab[i].name, alias)) {
-			return TRUE;
-		}
-	}
-	return FALSE;
 }
 
 void clearArgsTab(char* args[]) {
@@ -321,6 +311,15 @@ void do_it() {
 					printf("Error: could not cd home");
 				}
 				else {}
+				break;
+		case 7: //ALIASSTRING
+				//printf("found alias string!\n");
+				break;
+		case 8:	//ALIAS
+				//printf("found alias!\n");
+				break;
+		case 9: //ALIASCOMMAND
+				//printf("found alias command!\n");
 				break;
 		default:
 				printf("unrecognized command\n");

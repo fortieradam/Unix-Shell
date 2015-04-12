@@ -6,11 +6,11 @@
 alias				return ALIAS;
 cd					return CD;
 bye					return EXIT;
-alias+[ ]+[a-zA-Z]+	{
-						strcpy(stringArray, yytext);
-						return ALIASALIAS;
-					}
-alias+[ ]+[a-zA-Z]+[ ]+[\"]+[a-zA-Z0-9/\.\-\_ \|\<\>\&\"\\]++[\"]	{
+alias+[ ]+[a-zA-Z]++[ ]+[a-zA-Z]+	{
+									strcpy(stringArray, yytext);
+									return ALIASCOMMAND;
+								}		
+alias+[ ]+[a-zA-Z]++[ ]+[\"]+[a-zA-Z0-9/\.\-\_ \|\<\>\&\"\\]++[\"]	{
 																		strcpy(stringArray, yytext);
 																		return ALIASSTRING;
 																	}
