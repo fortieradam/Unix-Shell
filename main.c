@@ -11,10 +11,28 @@ int cmd;
 int builtin;
 int code;
 COMMAND comtab[MAXCMDS];
-int currcmd;
 int pipe1[2];
 int pipe2[2];
 int pipeProcess = FALSE;
+int currcmd;
+MYALIAS aliastab[MAXALIAS];
+
+void clearQuotedString() {
+	int index;
+	for(index = 0; index < 500; index++) {
+		quotedString[index] = '\0';
+	}
+}
+
+void clearAliasTab() {
+	int index;
+	for(index = 0; index < MAXALIAS; index++) {
+		aliastab[index].used = FALSE;
+		aliastab[index].name = NULL;
+		aliastab[index].str = NULL;
+	}
+}
+
 
 void clearArgsTab(char* args[]) {
 	//printf("Entered clearArgsTab() with PID: %d\n", getpid());
@@ -50,10 +68,10 @@ void zeroStringArray(char array) {
 	int i = 0;
 	while(i < 50) {
 		if(array == 'p') {
-			stringArray[i] = NULL;
+			stringArray[i] = '\0';
 		}
-		else {
-			cwd[i] = NULL;
+		else if(array == 'c') {
+			cwd[i] = '\0';
 		}
 		i++;
 	}
@@ -70,6 +88,7 @@ void shell_init() {
 	pipe(pipe2);
 	clearComTab();
 	//printf("Exited shell_init() with PID: %d\n", getpid());
+	clearAliasTab();
 	// init all variables
 	// define (allocate storage) for some var/tables
 	// init all tables (e.g., alias table)
@@ -136,7 +155,7 @@ void zeroArray(char* array) {
 	int index = 0;
 	int temp = strlen(array);
 	while(index < temp) {
-		array[index] = NULL;
+		array[index] = '\0';
 		index++;
 	}
 	//printf("Exited zeroArray() with PID: %d\n", getpid());
@@ -211,7 +230,6 @@ void findComPath(char* foundPath, COMMAND command) {
 	int index = 0;
 	int* count = &index;
 	index = 0;
-	int found;
 
 	int temp = 0;
 
@@ -231,7 +249,7 @@ void findComPath(char* foundPath, COMMAND command) {
 				outerBool = FALSE;
 			}
 		}
-		else if(found = isInDir(namelist, numOfElementsInDir, command.name)){
+		else if(isInDir(namelist, numOfElementsInDir, command.name)){
 			outerBool = FALSE;
 		}
 	}
@@ -328,6 +346,23 @@ void do_it() {
 					printf("Error: could not cd home");
 				}
 				else {}
+				break;
+		case 7: //ALIASSTRING
+				//printf("found alias string!\n");
+				break;
+		case 8:	//ALIAS
+				//printf("found alias!\n");
+				break;
+		case 9: //ALIASCOMMAND
+				//printf("found alias command!\n");
+				break;
+		case 10://UNALIAS
+				break;
+		case 11://SETENV
+				break;
+		case 12://PRINTENV
+				break;
+		case 13://UNSETENV
 				break;
 		default:
 				printf("unrecognized command\n");
@@ -613,6 +648,23 @@ void testPipingFunction() {
 			dup2(stdIn, 0);
 }
 
+void redirectAndRun(int oldfd, int newfd) {
+	int stdIOCopy = dup(newfd);       	// clone to a new descriptor
+
+	if(dup2(oldfd, newfd) < 0) {		// change to file
+		printf("Cannot redirect to file\n");
+	}
+
+	runIt(comtab[currcmd]);
+
+	close(oldfd);
+
+	if(dup2(stdIOCopy, newfd) < 0) {	// change back from the clone
+		printf("Cannot redirect back to standard IO\n");
+	}
+
+	close(stdIOCopy);					// close the clone
+}
 
 void execute_it() {
 	//printf("Entered execute_it() with PID: %d\n", getpid());
@@ -621,7 +673,7 @@ void execute_it() {
 		runIt(comtab[currcmd]);
 	}
 
-	if(comtab[currcmd].hasPipe == TRUE) {
+	else if(comtab[currcmd].hasPipe == TRUE) {
 		//printf("That's a nice pipe you got there...\n");
 		fdCommandInit();
 		testPipingFunction();
@@ -629,6 +681,30 @@ void execute_it() {
 		//printFunction();
 		//testPipingFunction();
 		//executePipe();
+	}
+	else if(comtab[currcmd].hasORed && !comtab[currcmd + 1].name) {
+		printf("No file given for output\n");
+		return;
+	}
+	else if(comtab[currcmd].hasIRed && !comtab[currcmd + 1].name) {
+		printf("No file given for input\n");
+		return;
+	}
+	else if(comtab[currcmd].hasORed == TRUE) {
+		int file = open(comtab[currcmd + 1].name, O_TRUNC | O_WRONLY | O_CREAT, S_IWRITE | S_IREAD);
+		redirectAndRun(file, 1);
+	}
+	else if(comtab[currcmd].hasIRed == TRUE) {
+		int file = open(comtab[currcmd + 1].name, O_RDONLY);
+		redirectAndRun(file, 0);
+	}
+	else if(comtab[currcmd].hasORed == TWO) {
+		int file = open(comtab[currcmd + 1].name, O_APPEND | O_WRONLY | O_CREAT, S_IWRITE | S_IREAD);
+		redirectAndRun(file, 1);
+	}
+	else if(comtab[currcmd].hasIRed == TWO) {
+		int file = open(comtab[currcmd + 1].name, O_RDONLY);
+		redirectAndRun(file, 0);
 	}
 	//printf("Exited execute_it() with PID: %d\n", getpid());
 

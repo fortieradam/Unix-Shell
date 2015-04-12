@@ -4,15 +4,37 @@
 void yyerror(const char *str){fprintf(stderr,"error: %s\n",str);}
 int yywrap(){return 1;}
 
-int isMetaChar(char* c) {
-	if(strcmp(c, "|") == 0
-		|| strcmp(c, "|") == 0
-		|| strcmp(c, "<") == 0
-		|| strcmp(c, ">") == 0
-		|| strcmp(c, "&") == 0
-		|| strcmp(c, "\"") == 0
-		|| strcmp(c, "\\") == 0)
+int isQuote(char c) {
+	if(c == '\"') {
+		return TRUE;
+	}
+	return FALSE;
+}
+
+int hasQuote(char c[]) {
+	int length = strlen(c);
+	int numQuotes = 0;
+	int i;
+	for(i = 0; i < length; i++) {
+		if(isQuote(c[i])) {
+			numQuotes++;
+		}
+	}
+	return numQuotes;
+}
+
+int isMetaChar(char c[]) {
+	if(	strcmp(c, "|") 		== 0
+		|| strcmp(c, "|") 	== 0
+		|| strcmp(c, "<") 	== 0
+		|| strcmp(c, ">") 	== 0
+		|| strcmp(c, "&") 	== 0
+		//|| strcmp(c, "\"") 	== 0
+		|| strcmp(c, "\\") 	== 0
+		|| strcmp(c, "<<") 	== 0
+		|| strcmp(c, ">>") 	== 0)
 	{
+		//printf("found meta char\n");
 		return TRUE;
 	}
 	return FALSE;
@@ -20,30 +42,55 @@ int isMetaChar(char* c) {
 
 void parseCommand()	{
 	char* token;
-	//printf("Splitting string \"%s\" into tokens:\n", stringArray);
 	token = strtok(stringArray, " ");
 	
 	int currCommandIndex = -1;
 	int currArgsIndex = -1;
 	
 	int j = 0;
+	int k = 0;
 	
 	while(token != NULL) {
-		//printf ("token = %s\n", token);
-		
 		if(!isMetaChar(token)) {
 			if(j == 0) {
 				currCommandIndex++;
 				comtab[currCommandIndex].name = token;
-				//printf("\tcomtab[%d].name = %s\n", currCommandIndex,comtab[currCommandIndex].name);
+				printf("\tcomtab[%d].name = %s\n", currCommandIndex, comtab[currCommandIndex].name);
 				comtab[currCommandIndex].numArgs = 0;
 				j++;
+			}
+			else if(hasQuote(token) == 1) {
+				char* space = " ";
+				
+				while(token != NULL) {
+					if(k > 0) {
+						strcat(quotedString, space);
+					}
+					strcat(quotedString, token);
+					
+					token = strtok(NULL, " ");
+					if(token == NULL || hasQuote(token) == 1) {
+						strcat(quotedString, space);
+						strcat(quotedString, token);
+						break;
+					}
+					k++;
+				}
+				
+				if(hasQuote(quotedString) == 2) {
+					// remove quotes
+				}
+				
+				currArgsIndex++;
+				comtab[currCommandIndex].args[currArgsIndex] = quotedString;
+				comtab[currCommandIndex].numArgs = currArgsIndex + 1;
+				printf("\tcomtab[%d].args[%d] = %s\n", currCommandIndex, currArgsIndex, comtab[currCommandIndex].args[currArgsIndex]);
 			}
 			else {
 				currArgsIndex++;
 				comtab[currCommandIndex].args[currArgsIndex] = token;
 				comtab[currCommandIndex].numArgs = currArgsIndex + 1;
-				//printf("\tcomtab[%d].args[%d] = %s\n", currCommandIndex, currArgsIndex, comtab[currCommandIndex].args[currArgsIndex]);
+				printf("\tcomtab[%d].args[%d] = %s\n", currCommandIndex, currArgsIndex, comtab[currCommandIndex].args[currArgsIndex]);
 			}
 		}
 		else {
@@ -69,37 +116,125 @@ void parseCommand()	{
 			if(strcmp(token, "\\") == 0) {
 				//printf("\tfound forward slash!\n");
 			}
+			if(strcmp(token, "<<") == 0) {
+				comtab[currCommandIndex].hasIRed = TWO;
+				//printf("\tcomtab[%d].hasIRed = %d\n", currCommandIndex, comtab[currCommandIndex].hasIRed);
+			}
+			if(strcmp(token, ">>") == 0) {
+				comtab[currCommandIndex].hasORed = TWO;
+				//printf("\tcomtab[%d].hasORed = %d\n", currCommandIndex, comtab[currCommandIndex].hasORed);
+			}
 			j = 0;
 		}
-		
-		token = strtok (NULL, " ");
+		if(token != NULL) {
+			token = strtok (NULL, " ");
+		}
 	}
+}
+
+void printAliases() {
+	int index;
+	for(index = 0; index < MAXALIAS; index++) {
+		if(aliastab[index].name != NULL) {
+			printf("%s\t\t", aliastab[index].name);
+			printf("%s\n", aliastab[index].str);
+		}
+	}
+}
+
+void addAlias() {
+	int index = findNextAliasIndex();
 	
-	currCommandIndex = 0;
-	currArgsIndex = 0;
+	char* token;
+	token = strtok(stringArray, " "); // token is now "alias"
+	token = strtok(NULL, " "); // token is now the alias name
+	
+	if(isAlias(token) == TRUE) {
+		printf("Alias is already taken");
+		return;
+	}
+	aliastab[index].name = token;
+	
+	printf("\taliastab[%d].name = %s\n", index, aliastab[index].name);
+	
+	token = strtok(NULL, " "); // token is now the alias string
+	
+	int k = 0;
+	char* space = " ";
+	
+	if(hasQuote(token) == 1) {
+		while(token != NULL) {
+			if(k > 0) {
+				strcat(quotedString, space);
+			}
+			strcat(quotedString, token);
+			
+			//printf("\t\ttoken = %s\n", token);
+			//printf("\t\tquotedString = %s\n", quotedString);
+			
+			token = strtok(NULL, " ");
+			if(token == NULL || hasQuote(token) == 1) {
+				strcat(quotedString, space);
+				strcat(quotedString, token);
+				break;
+			}
+			k++;
+		}
+		if(hasQuote(quotedString) == 2) {
+			// remove quotes
+		}
+		aliastab[index].str = quotedString;
+		printf("\taliastab[%d].str = %s\n", index, aliastab[index].str);
+	}
+	else {
+		if(hasQuote(token) == 2) {
+			// remove quotes
+		}
+		aliastab[index].str = token;
+		printf("\taliastab[%d].str = %s\n", index, aliastab[index].str);
+		return;
+	}
+}
+
+int isAlias(char alias[]) {
+	// check if alias already exists
+}
+
+int findNextAliasIndex() {
+	int index;
+	for(index = 0; index < MAXALIAS; index++) {
+		if(aliastab[index].name == NULL) {
+			return index;
+		}
+	}
+	return -1;
+}
+
+void setNewEnv() {
+	char name[500];
+	char* token;
+	token = strtok(stringArray, " "); // token is now "setenv"
+	token = strtok(NULL, " "); // token is now the setenv name
+	
+	strcpy(name, token);
 }
 
 %}
-%token CD STRING EXIT CDSTRING
-%union {
-	char* stringVal;
-}
+%token CD STRING EXIT CDSTRING ALIAS ALIASSTRING ALIASCOMMAND UNALIAS SETENV PRINTENV
 %start cmd
 %%
-
-commands: /* empty */
-		| commands command;
-
-command:
-		cmd|builtin|other;
 
 cmd: 	builtin
 	| 	other;
 
-builtin:	CDSTRING	{return 5;}
-		|	CD   		{return 6;}
-		|	EXIT		{return BYE;};
+builtin:	CDSTRING		{return 5;}
+		|	CD   			{return 6;}
+		|	ALIASCOMMAND	{addAlias(); return 9;}
+		|	ALIASSTRING		{addAlias(); return 7;}
+		|	ALIAS			{printAliases(); return 8;}
+		|	UNALIAS			{return 10;}
+		|	SETENV			{setNewEnv(); return 11;}
+		|	PRINTENV		{return 12;}
+		|	EXIT			{return BYE;};
 
-
-other:	STRING			{parseCommand(); return -1;};
-
+other:	STRING				{parseCommand(); return -1;};

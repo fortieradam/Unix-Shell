@@ -1,6 +1,6 @@
 #include <string.h>
 
-
+#define TWO				2
 #define TRUE			1
 #define FALSE			0
 
@@ -43,11 +43,11 @@ typedef struct com {
 } COMMAND;
 
 /* alias structure */
-struct alias {
+typedef struct alias {
 	int used;
-	char *alname;
-	char *alstr;
-};
+	char *name;
+	char *str;
+} MYALIAS;
 
 /* cache table structure */
 typedef struct cache {
@@ -56,7 +56,8 @@ typedef struct cache {
 } CACHE;
 
 /* externals */
-extern struct alias aliastab[];
+//extern struct alias aliastab[];
+extern MYALIAS aliastab[];
 extern COMMAND comtab[];
 extern CACHE cachetab[];
 extern char *pathtab[];
@@ -98,6 +99,6 @@ extern void displacedStringArray(int j);
 #define mkstr(a)			(char *)makestring(a)
 #define Allocate(t)			(t *)malloc(sizeof(t))
 
-
+char quotedString[500];
 char stringArray[MAXPATH];
 char cwd[MAXPATH];
