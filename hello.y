@@ -58,6 +58,7 @@ void parseCommand()	{
 				printf("\tcomtab[%d].name = %s\n", currCommandIndex, comtab[currCommandIndex].name);
 				comtab[currCommandIndex].numArgs = 0;
 				j++;
+				currArgsIndex = -1;
 			}
 			else if(hasQuote(token) == 1) {
 				char* space = " ";
