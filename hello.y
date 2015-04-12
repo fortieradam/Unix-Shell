@@ -4,6 +4,8 @@
 void yyerror(const char *str){fprintf(stderr,"error: %s\n",str);}
 int yywrap(){return 1;}
 
+char quotedString[500];
+
 int isQuote(char c) {
 	if(c == '\"') {
 		return TRUE;
@@ -42,7 +44,6 @@ int isMetaChar(char c[]) {
 
 void parseCommand()	{
 	char* token;
-	//printf("Splitting string \"%s\" into tokens:\n", stringArray);
 	token = strtok(stringArray, " ");
 	
 	int currCommandIndex = -1;
@@ -52,8 +53,6 @@ void parseCommand()	{
 	int k = 0;
 	
 	while(token != NULL) {
-		//printf ("token = %s\n", token);
-		
 		if(!isMetaChar(token)) {
 			if(j == 0) {
 				currCommandIndex++;
@@ -63,30 +62,25 @@ void parseCommand()	{
 				j++;
 			}
 			else if(hasQuote(token) == 1) {
-				char quotedString[500];
 				char* space = " ";
 				
 				while(token != NULL) {
 					if(k > 0) {
 						strcat(quotedString, space);
-						//printf("hit\n");
 					}
 					strcat(quotedString, token);
-					
-					printf("\t\ttoken = %s\n", token);
-					printf("\t\tquotedString = %s\n", quotedString);
 					
 					token = strtok(NULL, " ");
 					if(token == NULL || hasQuote(token) == 1) {
 						strcat(quotedString, space);
 						strcat(quotedString, token);
-						
-						printf("\t\ttoken = %s\n", token);
-						printf("\t\tquotedString = %s\n", quotedString);
-						
 						break;
 					}
 					k++;
+				}
+				
+				if(hasQuote(quotedString) == 2) {
+					// remove quotes
 				}
 				
 				currArgsIndex++;
@@ -154,32 +148,26 @@ void addAlias() {
 	int index = findNextAliasIndex();
 	
 	char* token;
-	//printf("Splitting string \"%s\" into tokens:\n", stringArray);
-	
 	token = strtok(stringArray, " "); // token is now "alias"
 	token = strtok(NULL, " ");
 	
-	//printf("token = %s\n", token);
-	
-	if(isAlias(token)) {
+	if(isAlias(token) == TRUE) {
 		printf("Alias is already taken");
 		return;
 	}
 	aliastab[index].name = token;
 	
-	printf("aliastab[%d].name = %s\n", index, aliastab[index].name);
+	printf("\taliastab[%d].name = %s\n", index, aliastab[index].name);
 	
 	token = strtok(NULL, " "); // token is now the alias string
 	
 	int k = 0;
-	char quotedString[500];
 	char* space = " ";
 	
 	if(hasQuote(token) == 1) {
 		while(token != NULL) {
 			if(k > 0) {
 				strcat(quotedString, space);
-				//printf("hit\n");
 			}
 			strcat(quotedString, token);
 			
@@ -190,35 +178,28 @@ void addAlias() {
 			if(token == NULL || hasQuote(token) == 1) {
 				strcat(quotedString, space);
 				strcat(quotedString, token);
-				
-				//printf("\t\ttoken = %s\n", token);
-				//printf("\t\tquotedString = %s\n", quotedString);
-				
 				break;
 			}
 			k++;
 		}
+		if(hasQuote(quotedString) == 2) {
+			// remove quotes
+		}
 		aliastab[index].str = quotedString;
-		printf("aliastab[%d].str = %s\n", index, aliastab[index].str);
+		printf("\taliastab[%d].str = %s\n", index, aliastab[index].str);
 	}
 	else {
+		if(hasQuote(token) == 2) {
+			// remove quotes
+		}
 		aliastab[index].str = token;
-		printf("aliastab[%d].str = %s\n", index, aliastab[index].str);
+		printf("\taliastab[%d].str = %s\n", index, aliastab[index].str);
 		return;
 	}
 }
 
-int isAlias(char* alias) {
-	int index;
-	for(index = 0; index < MAXALIAS; index++) {
-		if(aliastab[index].name == NULL) {
-			//do nothing
-		}
-		else if(strcmp(aliastab[index].name, alias)) {
-			return TRUE;
-		}
-	}
-	return FALSE;
+int isAlias(char alias[]) {
+	// check if alias already exists
 }
 
 int findNextAliasIndex() {
@@ -233,17 +214,8 @@ int findNextAliasIndex() {
 
 %}
 %token CD STRING EXIT CDSTRING ALIAS ALIASSTRING ALIASCOMMAND
-%union {
-	char* stringVal;
-}
 %start cmd
 %%
-
-commands: /* empty */
-		| commands command;
-
-command:
-		cmd|builtin|other;
 
 cmd: 	builtin
 	| 	other;
