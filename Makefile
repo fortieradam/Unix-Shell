@@ -3,8 +3,14 @@ CFLAGS = -g -Wall
 
 default: shell
 
-shell:  lex.yy.o y.tab.o main.o
+shell:  lex yacc lex.yy.o y.tab.o main.o
 	$(CC) -o shell lex.yy.o y.tab.o main.o
+
+lex:
+	flex hello.lex
+	
+yacc:
+	bison -dy hello.y
 
 lex.yy.o:  lex.yy.c y.tab.h shell.h
 	$(CC) -c lex.yy.c
