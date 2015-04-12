@@ -218,6 +218,12 @@ void setNewEnv() {
 	token = strtok(NULL, " "); // token is now the setenv name
 	
 	strcpy(name, token);
+	printf("\tname = %s\n", token);
+	
+	token = strtok(NULL, " "); // token is now the setenv string
+	printf("\tstring = %s\n", token);
+	
+	setenv(name, token, 1);
 }
 
 %}
