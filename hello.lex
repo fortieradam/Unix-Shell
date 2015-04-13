@@ -15,6 +15,10 @@ setenv+[ ]+[a-zA-Z]++[ ]+[a-zA-Z0-9/\.\-\_ \|\<\>\&\"\\\~]+	{
 																strcpy(stringArray, yytext);
 																return SETENV;
 															}
+unsetenv+[ ]+[a-zA-Z]+	{
+							strcpy(stringArray, yytext);
+							return UNSETENV;
+						}
 alias+[ ]+[a-zA-Z]++[ ]+[a-zA-Z]+	{
 										strcpy(stringArray, yytext);
 										return ALIASCOMMAND;

@@ -4,6 +4,15 @@
 void yyerror(const char *str){fprintf(stderr,"error: %s\n",str);}
 int yywrap(){return 1;}
 
+void removeAllChars(char* str, char c) {
+    char *pr = str, *pw = str;
+    while (*pr) {
+        *pw = *pr++;
+        pw += (*pw != c);
+    }
+    *pw = '\0';
+}
+
 int isQuote(char c) {
 	if(c == '\"') {
 		return TRUE;
@@ -29,12 +38,11 @@ int isMetaChar(char c[]) {
 		|| strcmp(c, "<") 	== 0
 		|| strcmp(c, ">") 	== 0
 		|| strcmp(c, "&") 	== 0
-		//|| strcmp(c, "\"") 	== 0
 		|| strcmp(c, "\\") 	== 0
 		|| strcmp(c, "<<") 	== 0
 		|| strcmp(c, ">>") 	== 0)
 	{
-		//printf("found meta char\n");
+		// found meta char
 		return TRUE;
 	}
 	return FALSE;
@@ -51,11 +59,13 @@ void parseCommand()	{
 	int k = 0;
 	
 	while(token != NULL) {
+		if(isAlias(token)) {
+			// expand alias
+		}
 		if(!isMetaChar(token)) {
 			if(j == 0) {
 				currCommandIndex++;
 				comtab[currCommandIndex].name = token;
-				printf("\tcomtab[%d].name = %s\n", currCommandIndex, comtab[currCommandIndex].name);
 				comtab[currCommandIndex].numArgs = 0;
 				j++;
 				currArgsIndex = -1;
@@ -77,53 +87,39 @@ void parseCommand()	{
 					}
 					k++;
 				}
-				
-				if(hasQuote(quotedString) == 2) {
-					// remove quotes
-				}
-				
 				currArgsIndex++;
 				comtab[currCommandIndex].args[currArgsIndex] = quotedString;
+				removeAllChars(comtab[currCommandIndex].args[currArgsIndex], '\"');
 				comtab[currCommandIndex].numArgs = currArgsIndex + 1;
-				printf("\tcomtab[%d].args[%d] = %s\n", currCommandIndex, currArgsIndex, comtab[currCommandIndex].args[currArgsIndex]);
 			}
 			else {
 				currArgsIndex++;
 				comtab[currCommandIndex].args[currArgsIndex] = token;
+				removeAllChars(comtab[currCommandIndex].args[currArgsIndex], '\"');
 				comtab[currCommandIndex].numArgs = currArgsIndex + 1;
-				printf("\tcomtab[%d].args[%d] = %s\n", currCommandIndex, currArgsIndex, comtab[currCommandIndex].args[currArgsIndex]);
 			}
 		}
 		else {
 			if(strcmp(token, "|") == 0) {
 				comtab[currCommandIndex].hasPipe = TRUE;
-				//printf("\tcomtab[%d].hasPipe = %d\n", currCommandIndex, comtab[currCommandIndex].hasPipe);
 			}
 			if(strcmp(token, "<") == 0) {
 				comtab[currCommandIndex].hasIRed = TRUE;
-				//printf("\tcomtab[%d].hasIRed = %d\n", currCommandIndex, comtab[currCommandIndex].hasIRed);
 			}
 			if(strcmp(token, ">") == 0) {
 				comtab[currCommandIndex].hasORed = TRUE;
-				//printf("\tcomtab[%d].hasORed = %d\n", currCommandIndex, comtab[currCommandIndex].hasORed);
 			}
 			if(strcmp(token, "&") == 0) {
-				//printf("\tfound ampersand!\n");
-				//printf("\tcomtab[%d].hasAmpersand = %d\n", currCommandIndex, comtab[currCommandIndex].hasAmpersand);
-			}
-			if(strcmp(token, "\"") == 0) {
-				//printf("\tfound quote!\n");
+				// do nothing
 			}
 			if(strcmp(token, "\\") == 0) {
-				//printf("\tfound forward slash!\n");
+				// do nothing
 			}
 			if(strcmp(token, "<<") == 0) {
 				comtab[currCommandIndex].hasIRed = TWO;
-				//printf("\tcomtab[%d].hasIRed = %d\n", currCommandIndex, comtab[currCommandIndex].hasIRed);
 			}
 			if(strcmp(token, ">>") == 0) {
 				comtab[currCommandIndex].hasORed = TWO;
-				//printf("\tcomtab[%d].hasORed = %d\n", currCommandIndex, comtab[currCommandIndex].hasORed);
 			}
 			j = 0;
 		}
@@ -136,8 +132,8 @@ void parseCommand()	{
 void printAliases() {
 	int index;
 	for(index = 0; index < MAXALIAS; index++) {
-		if(aliastab[index].name != NULL) {
-			printf("%s\t\t", aliastab[index].name);
+		if(aliastab[index].name[0] != '\0') {
+			printf("%s\t", aliastab[index].name);
 			printf("%s\n", aliastab[index].str);
 		}
 	}
@@ -151,12 +147,10 @@ void addAlias() {
 	token = strtok(NULL, " "); // token is now the alias name
 	
 	if(isAlias(token) == TRUE) {
-		printf("Alias is already taken");
+		printf("Alias is already taken\n");
 		return;
 	}
-	aliastab[index].name = token;
-	
-	printf("\taliastab[%d].name = %s\n", index, aliastab[index].name);
+	strcpy(aliastab[index].name, token);
 	
 	token = strtok(NULL, " "); // token is now the alias string
 	
@@ -170,9 +164,6 @@ void addAlias() {
 			}
 			strcat(quotedString, token);
 			
-			//printf("\t\ttoken = %s\n", token);
-			//printf("\t\tquotedString = %s\n", quotedString);
-			
 			token = strtok(NULL, " ");
 			if(token == NULL || hasQuote(token) == 1) {
 				strcat(quotedString, space);
@@ -181,53 +172,68 @@ void addAlias() {
 			}
 			k++;
 		}
-		if(hasQuote(quotedString) == 2) {
-			// remove quotes
-		}
-		aliastab[index].str = quotedString;
-		printf("\taliastab[%d].str = %s\n", index, aliastab[index].str);
+		strcpy(aliastab[index].str, quotedString);
+		removeAllChars(aliastab[index].str, '\"');
 	}
 	else {
-		if(hasQuote(token) == 2) {
-			// remove quotes
-		}
-		aliastab[index].str = token;
-		printf("\taliastab[%d].str = %s\n", index, aliastab[index].str);
+		strcpy(aliastab[index].str, token);
+		removeAllChars(aliastab[index].str, '\"');
 		return;
 	}
 }
 
-int isAlias(char alias[]) {
+int isAlias(char* alias) {
 	// check if alias already exists
+	int index;
+	for(index = 0; index < MAXALIAS; index++) {
+		if(strcmp(aliastab[index].name, alias) == 0) {
+			return TRUE;
+		}
+	}
+	return FALSE;
 }
 
 int findNextAliasIndex() {
 	int index;
 	for(index = 0; index < MAXALIAS; index++) {
-		if(aliastab[index].name == NULL) {
+		if(aliastab[index].name[0] == '\0') {
 			return index;
 		}
 	}
 	return -1;
 }
 
-void setNewEnv() {
-	char name[500];
+char* findAliasString(char* name) {
+	int index;
+	for(index = 0; index < MAXALIAS; index++) {
+		if(strcmp(aliastab[index].name, name) == 0) {
+			return aliastab[index].str;
+		}
+	}
+	return NULL;
+}
+
+void removeAlias() {
 	char* token;
-	token = strtok(stringArray, " "); // token is now "setenv"
-	token = strtok(NULL, " "); // token is now the setenv name
+	token = strtok(stringArray, " "); // token is now "unalias"
+	token = strtok(NULL, " "); // token is now the alias name
 	
-	strcpy(name, token);
-	printf("\tname = %s\n", token);
+	if(isAlias(token) == FALSE) {
+		printf("\"%s\" is not an alias\n", token);
+		return;
+	}
 	
-	token = strtok(NULL, " "); // token is now the setenv string
-	printf("\tstring = %s\n", token);
-	
-	setenv(name, token, 1);
+	int index;
+	for(index = 0; index < MAXALIAS; index++) {
+		if(strcmp(aliastab[index].name, token) == 0) {
+			aliastab[index].name[0] = '\0';
+			aliastab[index].str[0] = '\0';
+		}
+	}
 }
 
 %}
-%token CD STRING EXIT CDSTRING ALIAS ALIASSTRING ALIASCOMMAND UNALIAS SETENV PRINTENV
+%token CD STRING EXIT CDSTRING ALIAS ALIASSTRING ALIASCOMMAND UNALIAS SETENV PRINTENV UNSETENV
 %start cmd
 %%
 
@@ -239,9 +245,10 @@ builtin:	CDSTRING		{return 5;}
 		|	ALIASCOMMAND	{addAlias(); return 9;}
 		|	ALIASSTRING		{addAlias(); return 7;}
 		|	ALIAS			{printAliases(); return 8;}
-		|	UNALIAS			{return 10;}
-		|	SETENV			{setNewEnv(); return 11;}
+		|	UNALIAS			{removeAlias(); return 10;}
+		|	SETENV			{return 11;}
 		|	PRINTENV		{return 12;}
+		|	UNSETENV		{return 13;}
 		|	EXIT			{return BYE;};
 
 other:	STRING				{parseCommand(); return -1;};

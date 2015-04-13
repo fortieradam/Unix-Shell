@@ -1,11 +1,4 @@
-You must have a README file that clearly specifies the features that you have NOT 
-implemented followed by a list of features that you have implemented.
-
-README file must contain all relevant information about your code, specially what 
-parts work and do not work. Don't forget to include instructions on how to run the Makefile.
-
-
-HAVE NOT IMPLEMENTED|
+HAVE NOT IMPLEMENTED
 ---------------------
 
 	1) Support of Multiple pipes
@@ -15,7 +8,7 @@ HAVE NOT IMPLEMENTED|
 	5) Environment Variable expansion
 	6) Combination of piping and I/O.
 
-HAVE IMPLEMENTED|
+HAVE IMPLEMENTED
 -----------------
 
 	1) Tokenized, parsed, and properly placed all commands, arguments, and operators in the respective data structures
@@ -27,7 +20,7 @@ HAVE IMPLEMENTED|
 	7) File input to exe to execute line by line
 
 
-INSTRUCTIONS|
+INSTRUCTIONS
 -------------
 
 	MAKEFILE:
