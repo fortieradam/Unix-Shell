@@ -1,7 +1,6 @@
 #include "shell.h"
 #include <stdio.h>
 #include <stdlib.h>
-#include <unistd.h>
 #include <dirent.h>
 #include <sys/stat.h>
 #include <sys/wait.h>
@@ -108,8 +107,9 @@ int getCommand() {
 		printf("Unix-Shell:%s User01$ ", getcwd(cwd, sizeof(cwd)));
 	}
 	builtin = yyparse();
+	printf("builtin: %d\n", builtin);
 	//printf("Exited getCommand() with PID: %d\n", getpid());
-	if(builtin != 4 && builtin != 0 && builtin != 2) {
+	if(builtin != 4 && builtin != 0 && builtin != 2 && builtin != 1) {
 		return OK;
 	}
 	else if (builtin == BYE) {
@@ -324,6 +324,30 @@ void displacedStringArray(int j) {
 	//printf("Exited displacedStringArray() with PID: %d\n", getpid());
 }
 
+void printEnv(){
+	int i = 0;
+	while(environ[i]) {
+  		printf("%s\n", environ[i++]);
+	}
+}
+
+void setNewEnv() {
+	char name[500];
+	char variable[500];
+	char* token;
+	token = strtok(stringArray, " "); // token is now "setenv"
+	token = strtok(NULL, " "); // token is now the setenv name
+	
+	strcpy(name, token);
+	printf("\tname = %s\n", token);
+	
+	token = strtok(NULL, " "); // token is now the setenv string
+	strcpy(variable, token);
+	printf("\tstring = %s\n", variable);
+	
+	//setenv(name, variable, 1);
+}
+
 void do_it() {
 //	printf("Entered do_it() with PID: %d\n", getpid());
 	switch(builtin) {
@@ -359,8 +383,10 @@ void do_it() {
 		case 10://UNALIAS
 				break;
 		case 11://SETENV
+				setNewEnv();
 				break;
 		case 12://PRINTENV
+				printEnv();
 				break;
 		case 13://UNSETENV
 				break;
@@ -667,9 +693,7 @@ void redirectAndRun(int oldfd, int newfd) {
 }
 
 void execute_it() {
-	//printf("Entered execute_it() with PID: %d\n", getpid());
 	if(comtab[currcmd].hasPipe != TRUE && comtab[currcmd].hasIRed != TRUE && comtab[currcmd].hasORed != TRUE) {
-		//printf("GOT ERE\n");
 		runIt(comtab[currcmd]);
 	}
 
@@ -677,10 +701,6 @@ void execute_it() {
 		//printf("That's a nice pipe you got there...\n");
 		fdCommandInit();
 		testPipingFunction();
-		//printf("Post execution\n");
-		//printFunction();
-		//testPipingFunction();
-		//executePipe();
 	}
 	else if(comtab[currcmd].hasORed && !comtab[currcmd + 1].name) {
 		printf("No file given for output\n");
@@ -735,10 +755,10 @@ void execute_it() {
 }
 
 void processCommand() {
-	//printf("Entered processCommand() with PID: %d\n", getpid());
 	if(builtin !=0 && builtin != -1) {
 		do_it();
 		currcmd += 1;
+		printf("HERE\n");
 	}
 	else {
 		int status;
@@ -753,38 +773,12 @@ void processCommand() {
 
 		waitpid(pid, &status, NULL);
 	}
-	//printf("Exited processCommand() with PID: %d\n", getpid());
 }
 
 int main() {
-	//printf("Entered main() with PID: %d\n", getpid());
-	//if(!pipeProcess) {
 		shell_init();
-		printf("Master PID: %d\n", getpid());
-		//comtab[0].hasPipe = TRUE;
-		//clearComTab();
-		/*
-		comtab[0].name = "ls";
-		comtab[0].hasPipe = TRUE;
-		comtab[0].hasIRed = FALSE;
-		comtab[0].hasORed = FALSE;
-		comtab[0].infd = 0;
-		comtab[0].outfd = 0;
-		comtab[0].numArgs = 0;
-		clearArgsTab(comtab[0].args);
+		int continueReading = TRUE;
 
-		comtab[1].name = "grep";
-		comtab[1].hasPipe = FALSE;
-		comtab[1].hasIRed = FALSE;
-		comtab[1].hasORed = FALSE;
-		comtab[1].infd = 0;
-		comtab[1].outfd = 0;
-		comtab[1].numArgs = 1;
-		clearArgsTab(comtab[1].args);
-		comtab[1].args[0] = "h";
-		*/
-		//execute_it();
-	//}
 		while(TRUE) {
 			/*
 			int status;
@@ -805,17 +799,18 @@ int main() {
 					switch (cmd) {
 						case BYE:		exit(0);
 										break;
-						case ERRORS:	recover_from_errors();
+						case ERRORS:	exit(0);
+										//recover_from_errors();
 										break;
 						case OK:		processCommand();
 										break;
 					}
 				}
 				//exit(1);//signal and then kill
-			//}
+			}
 
 			//waitpid(pid, &status, NULL);//Parent wait and reloop to fork
-		}
+		//}
 
 	return 0;
 }

@@ -1,4 +1,5 @@
 #include <string.h>
+#include <unistd.h>
 
 #define TWO				2
 #define TRUE			1
@@ -91,6 +92,7 @@ extern char distf[];
 extern int append;
 extern int loop;
 extern void displacedStringArray(int j);
+extern char **environ;
 
 
 #define NIL(x) 				(x *)0
